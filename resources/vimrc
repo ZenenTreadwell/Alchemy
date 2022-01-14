@@ -1,0 +1,34 @@
+" Zen's .vimrc file, 2022
+
+" the basics
+set nocompatible 	" vi is for nerds, unlike vim
+filetype on	    	" gotta know what we're working with
+filetype plugin on
+filetype indent on
+syntax enable		" syntax highlighting, always and forever
+
+" a e s t h e t i c s
+set number	    	" I like knowing where I am
+set scrolloff=10	" don't scroll right to the edge
+set nowrap	    	" not a fan of wrapping lines
+set showmode		" In case you forget when you're in normal mode
+let g:solarized_termcolors=256
+colorscheme solarized
+set background=dark
+
+" Tabs
+set shiftwidth=4
+set tabstop=4
+set expandtab
+
+" Searching -- press '/' to search in vim (or '?' to search backwards)
+set incsearch		" Highlights as you type
+set ignorecase		
+set smartcase		" ignore case, unless you capitalise
+set hlsearch
+set showmatch
+
+
+" I like to remap my escape key to jj when I'm coding
+inoremap jj <Esc>
+
