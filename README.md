@@ -1,5 +1,5 @@
 # Alchemy
-A collection of scripts for working with bare metal
+A collection of scripts for working with bare metal.
 
 ## Commands
 `make it-pretty` is meant to be run on a freshly installed operating system.
