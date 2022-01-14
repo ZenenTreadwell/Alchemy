@@ -20,20 +20,22 @@ fi
 echo ""
 
 install_if_needed() {
-	if [ "$DISTRO" = "debian" ]; then
-		for package in "$@"
-		do
-			if [ -z $(which $package) ]; then
-				echo "installing" $package
-				sudo apt install -y $package
-			else
-				echo $package 'already installed!'
-			fi
-		done
-	
-	else 
-		echo "Only working on Debian right now!"
-	fi
+    for package in "$@"
+    do
+        if [ -z $(which $package) ]; then
+            echo "installing" $package
+
+            if [ "$DISTRO" = "debian" ]; then
+                sudo apt install -y $package
+            else 
+                echo "Only working on Debian right now!"
+            fi
+
+        else
+            echo $package 'already installed!'
+        fi
+    done
+
 }
 
 echo "Making sure we've got the basics..."
@@ -48,13 +50,19 @@ echo ""
 echo "Copying configuration files"
 mkdir -p $HOME/.vim/colors
 cp resources/solarized.vim $HOME/.vim/colors/
-cp resouces/vimrc $HOME/.vimrc
-cp resouces/tmux.conf $HOME/.tmux.conf
-cp resouces/tmux-powerline-theme.sh $HOME/.tmux/tmux-powerline/themes/default.sh
+cp resources/vimrc $HOME/.vimrc
+cp resources/tmux.conf $HOME/.tmux.conf
+cp resources/tmux-powerline-theme.sh $HOME/.tmux/tmux-powerline/themes/default.sh
 echo ""
 
 echo "Installing Oh My Zsh for theming - this could take a moment"
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+cat resources/zshrc-extras >> $HOME/.zshrc
+echo ""
+
 echo "Adding p10k for optimal dev experience"
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 sed -i 's/^ZSH_THEME.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' $HOME/.zshrc
+echo ""
+
+echo "...and we're back! Now that you've installed everything you need, try closing your connection to the terminal and re-opening."
