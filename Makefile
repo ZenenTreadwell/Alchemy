@@ -20,5 +20,6 @@ imbuement:
 	@scripts/write-image.sh
 
 preparations:
-	@echo "soon!"
+	@chmod +x scripts/prep-rpi-usb.sh
+	@scripts/prep-rpi-usb.sh
 		
