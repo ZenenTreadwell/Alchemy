@@ -1,8 +1,24 @@
 # This Makefile exists because it's my favorite way to simplify running groups of commands directly from the command line
 #
 # Variables
-NOTHING = yet
+IMAGE := raspios_lite_arm64.zip
+DOWNLOAD_LINK := https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2021-11-08/2021-10-30-raspios-bullseye-arm64-lite.zip
 
 it-pretty:
-	@chmod +x init.sh
-	@./init.sh
+	@chmod +x scripts/init.sh
+	@scripts/init.sh
+
+it-autonomous:
+	@echo "soon!"
+
+acquisition:
+	@chmod +x scripts/get-image.sh
+	@scripts/get-image.sh
+
+imbuement:
+	@chmod +x scripts/write-image.sh
+	@scripts/write-image.sh
+
+preparations:
+	@echo "soon!"
+		
