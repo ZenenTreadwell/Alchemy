@@ -5,15 +5,15 @@
 
 if [ -f "/etc/debian_version" ]; then
 	DISTRO="debian"
-	echo "Debian, Ubuntu, or Raspbian OS detected, proceeding with Debian-compatible AO installation."
+	echo "Debian, Ubuntu, or Raspbian OS detected."
 elif [ -f "/etc/arch-release" ]; then
 	DISTRO="arch"
-	echo Arch- or Manjaro-based OS detected, proceeding with Arch-compatible AO installation.
+	echo "Arch- or Manjaro-based OS detected."
 elif [ $(uname | grep -c "Darwin") -eq 1 ]; then
 	DISTRO="mac"
-	echo MacOS detected, proceeding with Mac-compatible AO installation.
+	echo "MacOS detected."
 else
-	echo Could not detect your OS distribution. Running this script could make a mess, so installing manually is recommended.
+	echo "I don't know what OS you're running! Cancelling this operation."
 	exit 1
 fi
 
@@ -25,11 +25,17 @@ install_if_needed() {
         if [ -z $(which $package) ]; then
             echo "installing" $package
 
-            if [ "$DISTRO" = "debian" ]; then
-                sudo apt install -y $package
-            else 
-                echo "Only working on Debian right now!"
-            fi
+            case $DISTRO in
+                "debian")
+                    sudo apt install -y $package
+                    ;;
+                "arch")
+                    sudo pacman -S $package
+                    ;;
+                "mac")
+                    brew install $package
+                    ;;
+            esac
 
         else
             echo $package 'already installed!'
@@ -38,8 +44,39 @@ install_if_needed() {
 
 }
 
+echo "Updating the repositories..."
+case $DISTRO in
+    "debian")
+        sudo apt update
+        sudo apt autoremove
+        ;;
+    "arch")
+        sudo pacman -Syu
+        ;;
+    "mac")
+        install
+        sudo brew update
+        ;;
+esac
+echo ""
+
 echo "Making sure we've got the basics..."
-install_if_needed vim tmux zsh git silversearcher-ag
+case $DISTRO in
+    "debian")
+        echo "Updating the repositories!"
+        sudo apt update
+        sudo apt autoremove
+        install_if_needed vim tmux zsh git silversearcher-ag
+        ;;
+    "arch")
+        echo "Updating the repositories!"
+        sudo pacman -Syu
+        install_if_needed vim tmux zsh git the_silver_searcher
+        ;;
+    "mac")
+        install_if_needed vim tmux zsh git the_silver_searcher
+        ;;
+esac
 echo ""
 
 echo "Getting tmux-powerline"
