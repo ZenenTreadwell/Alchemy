@@ -23,3 +23,6 @@ preparations:
 	@chmod +x scripts/prep-rpi-usb.sh
 	@scripts/prep-rpi-usb.sh
 		
+manifest:
+	@chmod +x scripts/wordpress.sh
+	@scripts/wordpress.sh

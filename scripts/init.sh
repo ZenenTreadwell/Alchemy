@@ -49,6 +49,7 @@ case $DISTRO in
     "debian")
         sudo apt update
         sudo apt autoremove
+        sudo apt upgrade
         ;;
     "arch")
         sudo pacman -Syu
