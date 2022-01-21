@@ -10,3 +10,5 @@ It installs some utilities that I rely on for maximum developmental efficiency a
 `make imbuement` looks for available USBs attached to the device and writes an image to it.
 
 `make preparations` configures some basic settings for use on a fresh RPi installation (SSH, hostname)
+
+`make manifest` Installs and configures Wordpress on the system
