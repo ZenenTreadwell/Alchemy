@@ -136,6 +136,7 @@ done
 echo "Done!"
 
 # ------------------- Step 3 - NGINX Setup -------------------
+
 echo ""
 echo "We might need to query DNS records here..."
 install_if_needed dig
@@ -163,14 +164,16 @@ echo ""
 sudo systemctl reload nginx
 echo "Excellent! We've configured $WP_NGINX_CONF to serve your WordPress site from $domain"
 echo ""
+
 # ------------------- Step 4 - Certbot -------------------
+
 read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 boot
 echo ""
 case $boot in
     y | Y)
 	echo "Alright, let's get Certbot in here!"
 	install_if_needed python3 certbot python3-certbot-nginx
-	echo "${BOLD}Take it away, Certbot${NC}"
+	echo -e "${BOLD}Take it away, Certbot${NC}"
 	sudo certbot --nginx
         ;;
     *)
@@ -178,4 +181,34 @@ case $boot in
 	;;
 esac
 echo ""
-echo "Okay, well that's everything! You should be ready to continue your WordPress setup by opening $domain in your browser."
+
+# ------------------- Step 5 - Port Testing -------------------
+
+echo -e "${BOLD}One more thing!${NC} We need to make sure that your ports are open."
+nmap -Pn $domain > nmap.txt
+OPEN=1
+if grep -qE "^80/.*(open|filtered)" nmap.txt; then
+	echo -e "I can see port ${GREEN}80${NC}!"
+else
+	echo -e "Uh oh, port ${RED}80${NC} isn't showing up..."
+	OPEN=0
+fi
+
+if grep -qE "^443/.*(open|filtered)" nmap.txt; then
+	echo -e "I can see port ${GREEN}443${NC} as well!"
+else
+	echo -e "Uh oh, port ${RED}443${NC} isn't showing up..."
+	OPEN=0
+fi
+rm nmap.txt
+echo ""
+if [[ $OPEN -eq 0 ]]; then
+	echo -e "${RED}Port configuration needed.${NC} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."
+       echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."
+       echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}$(ip route | grep default | grep -oP "(?<=src )[^ ]+")${NC})."
+       echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${NC}"
+       echo "That's all the help I can give you regarding port forwarding. Good luck!"
+       echo ""
+fi
+
+echo "Okay, well that's everything! As long as your ports are forwarded, you should be ready to continue your WordPress setup by opening $domain in your browser."
