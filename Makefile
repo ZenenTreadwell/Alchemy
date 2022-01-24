@@ -8,8 +8,9 @@ it-pretty:
 	@chmod +x scripts/init.sh
 	@scripts/init.sh
 
-it-autonomous:
-	@echo "soon!"
+autonomy:
+	@chmod +x scripts/fresh-setup.sh
+	@scripts/fresh-setup.sh
 
 acquisition:
 	@chmod +x scripts/get-image.sh

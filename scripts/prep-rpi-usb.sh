@@ -75,6 +75,17 @@ if [[ ! -z $hostname ]]; then
     echo "Hostname configured to $hostname"
 fi
 
+read -p "Would you like to copy Alchemy to the new device? (y/n): " -n1 boot
+case $boot in
+    y | Y)
+        echo ""
+        echo "zipping and copying..."
+        zip -r alchemy ./{Makefile,README.md,resources,scripts}
+        sudo cp alchemy.zip /mnt/usr/share/
+        echo "done!"
+        ;;
+esac
+
 sudo umount ${target}2
 sleep 1
 

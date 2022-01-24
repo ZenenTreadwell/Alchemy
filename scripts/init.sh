@@ -41,7 +41,6 @@ install_if_needed() {
             echo $package 'already installed!'
         fi
     done
-
 }
 
 echo "Updating the repositories..."
