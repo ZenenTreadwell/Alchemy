@@ -9,8 +9,8 @@ it-pretty:
 	@scripts/init.sh
 
 autonomy:
-	@chmod +x scripts/fresh-setup.sh
-	@scripts/fresh-setup.sh
+	@chmod +x scripts/ao.sh
+	@scripts/ao.sh
 
 acquisition:
 	@chmod +x scripts/get-image.sh

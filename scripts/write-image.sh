@@ -75,7 +75,19 @@ echo ""
 echo -e "Getting ready to write ${GREEN}$image${NC} to ${BLUE}$target${NC}"
 echo ""
 read -p "Press Enter to continue (ctrl+C to cancel):" 
-unzip -p "images/$image" | sudo dd of=$target bs=4M conv=fsync status=progress
+
+case $image in
+    *.iso)
+        sudo dd if=images/$image of=$target bs=4M conv=fsync status=progress
+        ;;
+    *.zip)
+        unzip -p "images/$image" | sudo dd of=$target bs=4M conv=fsync status=progress
+        ;;
+    *)
+        echo "I don't know what to do with this file extension, sorry!"
+        exit
+        ;;
+esac
 
 # Leaving this line in if I want to debug and not necessarily run dd all the time
 # echo "unzip -p \"images/$image\" | sudo dd of=$target bs=4M conv=fsync status=progress"
