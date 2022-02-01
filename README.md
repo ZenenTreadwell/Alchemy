@@ -3,7 +3,7 @@ A collection of scripts for working with bare metal.
 
 ## Commands
 
-`make acquisition` runs a script that downloads a file (in this case, an RPI image) and confirms it with a sha256 sum.
+`make acquisition` runs a script that downloads a file (either Raspbian or Manjaro) and confirms it with a sha256 sum.
 
 `make imbuement` looks for available USBs attached to the device and writes an image to it.
 
