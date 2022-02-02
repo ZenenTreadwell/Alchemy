@@ -19,6 +19,9 @@ fi
 
 echo ""
 
+# This makes sure that ctrl+C exits the entire script
+trap "exit" INT
+
 install_if_needed() {
     for package in "$@"
     do
@@ -30,7 +33,7 @@ install_if_needed() {
                     sudo apt install -y $package
                     ;;
                 "arch")
-                    sudo pacman -S $package
+                    sudo pacman -S $package --noconfirm
                     ;;
                 "mac")
                     brew install $package
@@ -63,25 +66,20 @@ echo ""
 echo "Making sure we've got the basics..."
 case $DISTRO in
     "debian")
-        echo "Updating the repositories!"
-        sudo apt update
-        sudo apt autoremove
-        install_if_needed vim tmux zsh git silversearcher-ag
+        install_if_needed make vim tmux zsh git silversearcher-ag
         ;;
     "arch")
-        echo "Updating the repositories!"
-        sudo pacman -Syu
-        install_if_needed vim tmux zsh git the_silver_searcher
+        install_if_needed make vim tmux zsh git the_silver_searcher
         ;;
     "mac")
-        install_if_needed vim tmux zsh git the_silver_searcher
+        install_if_needed make vim tmux zsh git the_silver_searcher
         ;;
 esac
 echo ""
 
 echo "Getting tmux-powerline"
-mkdir $HOME/.tmux
-git clone https://github.com/erikw/tmux-powerline.git $HOME/.tmux/
+mkdir -p $HOME/.tmux
+git clone https://github.com/erikw/tmux-powerline.git $HOME/.tmux/tmux-powerline
 echo ""
 
 echo "Copying configuration files"
