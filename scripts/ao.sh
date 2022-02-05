@@ -11,7 +11,7 @@ BOLD="\e[1m"
 ULINE="\e[4m"
 RESET="\e[0m"
 
-# Make sure that ctrl+C actually exits
+# Make sure that ctrl+C actually exits the script
 trap "exit" INT
 
 clear
@@ -69,7 +69,9 @@ echo ""
 echo -e "Got it! Next we're going to make sure the system's repositories (where they get their data from)\nare updated and that you have all the basic command line utilities we need to continue. \n\n${BLUE}(enter)${RESET}" 
 read
 
-install_if_needed() { # Coding Moment: generally, whenever you see something with brackets at the end of it, like this() or like(this), it's a function! It takes inputs and gives outputs
+# Coding Moment: generally, whenever you see something with brackets at the end of it,
+# like this() or like(this), it's a function! It takes inputs and gives outputs
+install_if_needed() { 
     for package in "$@"
     do
         if [ -z $(which $package 2>/dev/null) ]; then
@@ -105,11 +107,11 @@ case $DISTRO in
         sudo apt upgrade
         ;;
     "arch")
-        #sudo pacman -Syu
+        sudo pacman -Syu
         ;;
     "fedora")
-        # sudo dnf update
-        # sudo dnf upgrade
+        sudo dnf update
+        sudo dnf upgrade
         ;;
     "mac")
         install
@@ -131,7 +133,7 @@ case $DISTRO in
             sudo pacman -S base-devel --noconfirm
         fi
 
-        install_if_needed git wget sqlite3 python git gmp sqlite3 \
+        install_if_needed wget python git gmp sqlite3 \
             python-mako python-pip net-tools zlib libsodium gettext
         ;;
     "mac")
@@ -171,30 +173,30 @@ while [[ -z $AO ]]; do
     esac
 done;
 echo ""
-#
-#if [ $AO = "3" ] || [ $AO = 'react' ]; then
-#    echo -e "${BOLD}Installing Node.js${RESET}"
-#    chmod +x scripts/nvm_install.sh
-#    scripts/nvm_install.sh
-#    if [ "$SHELL" = '/bin/zsh' ]; then
-#        echo 'sourcing zshrc'
-#        source ~/.zshrc
-#    else
-#        source ~/.bashrc
-#    fi
-#    nvm install v16.13.0
-#    nvm alias default v16.13.0
-#    if [ "$SHELL" = '/bin/zsh' ]; then
-#        echo 'sourcing zshrc'
-#        source ~/.zshrc
-#    else
-#        source ~/.bashrc
-#    fi
-#    echo ""
-#fi
-#
-#
-# TODO: Compile Bitcoin from C to make it resistant to changes in architecture (should work for ISA)
+
+if [ $AO = "3" ] || [ $AO = 'react' ]; then
+    echo -e "${BOLD}Installing Node.js${RESET}"
+    chmod +x scripts/nvm_install.sh
+    scripts/nvm_install.sh
+    if [ "$SHELL" = '/bin/zsh' ]; then
+        echo 'sourcing zshrc'
+        source ~/.zshrc
+    else
+        source ~/.bashrc
+    fi
+    nvm install v16.13.0
+    nvm alias default v16.13.0
+    if [ "$SHELL" = '/bin/zsh' ]; then
+        echo 'sourcing zshrc'
+        source ~/.zshrc
+    else
+        source ~/.bashrc
+    fi
+    echo ""
+fi
+
+
+# TODO: Compile Bitcoin from C to make it resistant to changes in architecture (should work for any ISA)
 if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Installing Bitcoin Ecosystem${RESET}"
     mkdir -p bitcoin
@@ -212,26 +214,26 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     rm -rf bitcoin-22.0
 
 
-    #echo -e "${BOLD}Installing lightningd${RESET}"
-    #git clone https://github.com/ElementsProject/lightning.git ~/lightning
-    #pushd ~/lightning
-    #git checkout v0.10.2
-    #./configure
-    #sudo make
-    #sudo make install
-    #popd
+    echo -e "${BOLD}Installing lightningd${RESET}"
+    git clone https://github.com/ElementsProject/lightning.git ~/lightning
+    pushd ~/lightning
+    git checkout v0.10.2
+    ./configure
+    sudo make
+    sudo make install
+    popd
 
     # TODO fix clboss
-    #echo 'Installing clboss'
-    #git clone https://github.com/ZmnSCPxj/clboss.git ~/clboss
-    #pushd ~/clboss
-    #git checkout 0.11B
-    #mkdir m4
-    #autoreconf -i
-    #./configure
-    #make
-    #sudo make install
-    #popd
+    # echo 'Installing clboss'
+    # git clone https://github.com/ZmnSCPxj/clboss.git ~/clboss
+    # pushd ~/clboss
+    # git checkout 0.11B
+    # mkdir m4
+    # autoreconf -i
+    # ./configure
+    # make
+    # sudo make install
+    # popd
 
     echo ""
     echo -e "${BOLD}Bitcoin installed!${RESET} Let's make sure it's configured now."
@@ -247,8 +249,21 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
         echo 'created default bitcoin config'                                                                                                                                                                                          
     fi                                                                                                                                                                                                                                
 
-    # TODO we should ask if they want to run in pruned mode
     sed -i "s/BTC_LOGIN/${AUTHLINE}/" $HOME/.bitcoin/bitcoin.conf
+
+    read -p "Quick question - do you have 500GB of open memory on this device? (y/n): " prune
+    echo ""
+    case $prune in
+        y | Y)
+            echo "Okay great! We'll leave the bitcoin config it as it is."
+            ;;
+        *)
+            echo "Let's cut it down to only store the last few blocks (It's only 550 MB!)"
+            sed -i "s/txindex=1/prune=550/" $HOME/.bitcoin/bitcoin.conf
+            ;;
+    esac
+
+    echo ""
 
     mkdir -p $HOME/.lightning
 
@@ -258,7 +273,6 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
         cp resources/sample_lightning_config $HOME/.lightning/config                                                                                                                                                                          
         echo 'created default lightning config'                                                                                                                                                                                        
     fi                                                                                                                                                                                                                                      
-
 fi
 echo ''
 
@@ -272,25 +286,23 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
         TORRCPATH='/etc/tor/torrc'
     fi
 
-    TORRCPATH=
-
     # Configure and write torrc file
     cp resources/torrc-template .
     sudo sed -i "s#USER#${USER}#g" torrc-template
     sudo sed -i "s#HOME#${HOME}#g" torrc-template
 
-    if [ -n "$TORRCPATH" ]; then
-        sudo mv torrc-template $TORRCPATH
-    else
+    if [ -z "$TORRCPATH" ]; then
         echo -e "${RED}Uh oh...${RESET} I couldn't figure out where your torrc file is. That might cause some issues"
         sleep 3
         echo -e "\nAnyways...\n"
         sleep 2
+    else
+        sudo mv torrc-template $TORRCPATH
     fi
 fi
-#
-## ------------------- Step 3 - AO Installation -------------------
-#
+
+# ------------------- Step 3 - AO Installation -------------------
+
 echo -e "${BOLD}Configuring AO Core${RESET}\n"
 
 mkdir -p $HOME/.ao                                                                                                                                                                                                               
@@ -303,38 +315,36 @@ else
 fi    
 
 echo ""
-# case $AO in
-#     "3")
-#         echo -e "Installing ${BLUE}ao-3${RESET}"
-#         git clone 'https://github.com/AutonomousOrganization/ao-3.git' ~/ao-3
-#         pushd ~/ao-3
-#         npm install
-#         npm run build
-# 
-#         if [ -f "$HOME/ao-3/configuration.js" ]; then                                                                                                                                                                             
-#             echo configuration.js already exists                                                                                                                                                                                      
-#         else                                                                                                                                                                                                                          
-#             cp resources/ao-config $HOME/ao-react/configuration.js
-#             sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $HOME/ao-react/configuration.js
-#             sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $HOME/ao-react/configuration.js
-#             sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $HOME/ao-react/configuration.js
-#         fi                                                                                                                                                                                                                            
-# 
-#         npm run checkconfig
-#         popd
-#         ;;
-#     "react")
-#         echo -e "Installing ${BLUE}ao-react${RESET}"
-#         git clone 'https://github.com/coalition-of-invisible-colleges/ao-react.git' ~/ao-react
-# 
-#                 
-#         # TODO process env bug during webpack
-#         pushd ~/ao-react
-#         npm install
-#         npm run webpack
-#         popd
-#         ;;
-# esac
+case $AO in
+    "3")
+        echo -e "Installing ${BLUE}ao-3${RESET}"
+        git clone 'https://github.com/AutonomousOrganization/ao-3.git' ~/ao-3
+        pushd ~/ao-3
+        npm install
+        npm run build
+
+        if [ -f "$HOME/ao-3/configuration.js" ]; then                                                                                                                                                                             
+            echo configuration.js already exists                                                                                                                                                                                      
+        else                                                                                                                                                                                                                          
+            cp resources/ao-config $HOME/ao-react/configuration.js
+            sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $HOME/ao-react/configuration.js
+            sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $HOME/ao-react/configuration.js
+            sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $HOME/ao-react/configuration.js
+        fi                                                                                                                                                                                                                            
+
+        npm run checkconfig
+        popd
+        ;;
+    "react")
+        echo -e "Installing ${BLUE}ao-react${RESET}"
+        git clone 'https://github.com/coalition-of-invisible-colleges/ao-react.git' ~/ao-react
+                
+        pushd ~/ao-react
+        npm install
+        npm run webpack
+        popd
+        ;;
+esac
 
 # TODO this is kind of janky/fragile, it would be better to store this in ~/.ao
 CONFIG_FILE=$HOME/ao-$AO/configuration.js
@@ -350,67 +360,77 @@ else
     sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $CONFIG_FILE
 fi                                                                                                                                                                                                                            
 
-## ------------------- Step 4 - NGINX Setup -------------------
-#
-#echo ""
-#echo "We might need to query DNS records here..."
-#install_if_needed dig nginx
-#echo -e "You still there? I need to ask you some questions! \n\n${BLUE}(enter)${RESET}" 
-#read
-#echo ""
-#read -p "Do you have a domain name pointing to this computer? (y/n): " dns
-#echo ""
-#case $dns in
-#    y | Y)
-#        echo "Good to hear! What is it?"
-#        read -p "http://" domain
-#        ;;
-#    *)
-#        echo "Okay, let's just leave it open for now."
-#        domain=$(dig @resolver4.opendns.com myip.opendns.com +short)
-#        anywhere=1
-#        echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"
-#        ;;
-#esac
+# ------------------- Step 4 - NGINX Setup -------------------
 
-anywhere=1 # TODO Remove this line
-if [ "$anywhere" -eq 1 ]; then
-    ACCESS_POINT=http://localhost:8003
-else
-    ACCESS_POINT=https://$domain
-fi
+ echo ""
+ echo "We might need to query DNS records here..."
+ install_if_needed dig nginx
+ echo -e "You still there? I need to ask you some questions! \n\n${BLUE}(enter)${RESET}" 
+ read
+ echo ""
+ read -p "Do you have a domain name pointing to this computer? (y/n): " dns
+ echo ""
+ case $dns in
+     y | Y)
+         echo "Good to hear! What is it?"
+         read -p "http://" domain
+         ;;
+     *)
+         echo "Okay, let's just leave it open for now."
+         domain=$(dig @resolver4.opendns.com myip.opendns.com +short)
+         anywhere=1
+         echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"
+         ;;
+ esac
+ 
+ if [ "$anywhere" -eq 1 ]; then
+     ACCESS_POINT=http://localhost
+ else
+     ACCESS_POINT=https://$domain
+ fi
+ 
+ echo ""
 
-#echo ""
-#AO_NGINX_CONF=/etc/nginx/sites-available/ao
-#sudo cp resources/ao.nginx.conf $AO_NGINX_CONF
-#
-#if [ -n $anywhere ]; then
-#    sudo sed -i "s#SERVER_NAME#_#" $AO_NGINX_CONF
-#else
-#    sudo sed -i "s#SERVER_NAME#${domain}#" $AO_NGINX_CONF
-#fi
-#
-#sudo sed -i "s#FILE_ROOT#${HOME}/ao-react/dist#" $AO_NGINX_CONF
-#sudo ln -s /etc/nginx/sites-available/ao /etc/nginx/sites-enabled/
-#echo ""
-#sudo systemctl reload nginx
-#echo "Excellent! We've configured $AO_NGINX_CONF to serve your AO from $domain"
-#echo ""
-#
-#read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 ssl
-#echo ""
-#case $ssl in
-#    y | Y)
-#	echo "Alright, let's get Certbot in here!"
-#	install_if_needed python3 certbot python3-certbot-nginx
-#	echo -e "${BOLD}Take it away, Certbot${NC}"
-#	sudo certbot --nginx
-#        ;;
-#    *)
-#	echo "Yea, SSL is lame anyways..."
-#	;;
-#esac
-#echo ""
+ # Making sure this version of NGINX supports sites-enabled
+ if [[ -z $(sudo cat /etc/nginx/nginx.conf | grep sites-enabled) ]]; then
+     sudo mkdir -p /etc/nginx/sites-available
+     sudo mkdir -p /etc/nginx/sites-enabled
+     sudo cp resources/base.nginx.conf /etc/nginx/nginx.conf
+ fi
+
+ AO_NGINX_CONF=/etc/nginx/sites-available/ao
+ sudo cp resources/ao.nginx.conf $AO_NGINX_CONF
+ 
+ if [ -n $anywhere ]; then
+     sudo sed -i "s#SERVER_NAME#_#" $AO_NGINX_CONF
+ else
+     sudo sed -i "s#SERVER_NAME#${domain}#" $AO_NGINX_CONF
+ fi
+ 
+ sudo sed -i "s#FILE_ROOT#${HOME}/ao-react/dist#" $AO_NGINX_CONF
+
+ if [ ! -e /etc/nginx/sites-enabled/ao ]; then
+     sudo ln -s /etc/nginx/sites-available/ao /etc/nginx/sites-enabled/
+ fi
+ echo ""
+ sudo systemctl reload nginx
+ echo "Excellent! We've configured $AO_NGINX_CONF to serve your AO from $domain"
+ echo ""
+ 
+ read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 ssl
+ echo ""
+ case $ssl in
+     y | Y)
+ 	echo "Alright, let's get Certbot in here!"
+ 	install_if_needed python3 certbot python3-certbot-nginx
+ 	echo -e "${BOLD}Take it away, Certbot${NC}"
+ 	sudo certbot --nginx
+         ;;
+     *)
+ 	echo "Yea, SSL is lame anyways..."
+ 	;;
+ esac
+ echo ""
 
 # ------------------- Step 7 - Systemd Setup -------------------
 
@@ -434,30 +454,30 @@ while [[ -z $READY ]]; do
 done
 
 echo ""
-#echo "Creating tor.service..."
-#TOR_SERVICE=/etc/systemd/system/tor.service
-#if [ -f "$TOR_SERVICE" ]; then
-#    echo "Seems like you've already got tor here!"
-#else
-#    sudo cp resources/tor-service-template $TOR_SERVICE
-#
-#    # Making sure all values have been de-templated
-#    sudo sed -i "s#USER#${USER}#g" $TOR_SERVICE
-#    sudo sed -i "s#HOME#${HOME}#g" $TOR_SERVICE
-#    sudo sed -i "s#TORRCPATH#${TORRCPATH}#g" $TOR_SERVICE
-#    sudo sed -i "s#TORPATH#$(which tor)#g" $TOR_SERVICE
-#fi
-#
-#
-## Creating the .tor directory
-#sudo mkdir -p $HOME/.tor
-#sudo chown tor $HOME/.tor
-#sudo chgrp $USER $HOME/.tor
-#sudo chmod 770 $HOME/.tor
-#
-#echo "Enabling and starting Tor"
-#sudo systemctl enable tor
-#sudo systemctl start tor
+echo "Creating tor.service..."
+TOR_SERVICE=/etc/systemd/system/tor.service
+if [ -f "$TOR_SERVICE" ]; then
+    echo "Seems like you've already got tor here!"
+else
+    sudo cp resources/tor-service-template $TOR_SERVICE
+
+    # Making sure all values have been de-templated
+    sudo sed -i "s#USER#${USER}#g" $TOR_SERVICE
+    sudo sed -i "s#HOME#${HOME}#g" $TOR_SERVICE
+    sudo sed -i "s#TORRCPATH#${TORRCPATH}#g" $TOR_SERVICE
+    sudo sed -i "s#TORPATH#$(which tor)#g" $TOR_SERVICE
+fi
+
+
+# Creating the .tor directory
+sudo mkdir -p $HOME/.tor
+sudo chown tor $HOME/.tor
+sudo chgrp $USER $HOME/.tor
+sudo chmod 770 $HOME/.tor
+
+echo "Enabling and starting Tor"
+sudo systemctl enable tor
+sudo systemctl start tor
 
 echo ""
 echo "Creating bitcoin.service..."
@@ -511,40 +531,40 @@ sudo systemctl enable ao
 sudo systemctl start ao 
 
 echo ""
-echo "Enabling and starting ${GREEN}NGINX${RESET} as the webserver"
+echo -e "Enabling and starting ${GREEN}NGINX${RESET} as the webserver"
 sudo systemctl enable nginx
 sudo systemctl start nginx
 
 # ------------------- Step 8 - Port Testing -------------------
 
-#echo -e "${BOLD}One more thing!${RESET} We need to make sure that your ports are open."
-#install_if_needed nmap
-#nmap -Pn $domain > nmap.txt
-#OPEN=1
-#if grep -qE "^80/.*(open|filtered)" nmap.txt; then
-#	echo -e "I can see port ${GREEN}80${RESET}!"
-#else
-#	echo -e "Uh oh, port ${RED}80${RESET} isn't showing up..."
-#	OPEN=0
-#fi
-#
-#if grep -qE "^443/.*(open|filtered)" nmap.txt; then
-#	echo -e "I can see port ${GREEN}443${RESET} as well!"
-#else
-#	echo -e "Uh oh, port ${RED}443${RESET} isn't showing up..."
-#	OPEN=0
-#fi
-#rm nmap.txt
-#echo ""
-#if [[ $OPEN -eq 0 ]]; then
-#	echo -e "${RED}Port configuration needed.${RESET} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."
-#       echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."
-#       echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}$(ip route | grep default | grep -oP "(?<=src )[^ ]+")${RESET})."
-#       echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${RESET}"
-#       echo "That's all the help I can give you regarding port forwarding. Good luck!"
-#       echo ""
-#fi
-#
+echo ""
+echo -e "${BOLD}One more thing!${RESET} We need to make sure that your ports are open."
+install_if_needed nmap
+nmap -Pn $domain > nmap.txt
+OPEN=1
+if grep -qE "^80/.*(open|filtered)" nmap.txt; then
+	echo -e "I can see port ${GREEN}80${RESET}!"
+else
+	echo -e "Uh oh, port ${RED}80${RESET} isn't showing up..."
+	OPEN=0
+fi
+
+if grep -qE "^443/.*(open|filtered)" nmap.txt; then
+	echo -e "I can see port ${GREEN}443${RESET} as well!"
+else
+	echo -e "Uh oh, port ${RED}443${RESET} isn't showing up..."
+	OPEN=0
+fi
+rm nmap.txt
+echo ""
+if [[ $OPEN -eq 0 ]]; then
+	echo -e "${RED}Port configuration needed.${RESET} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."
+       echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."
+       echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}$(ip route | grep default | grep -oP "(?<=src )[^ ]+")${RESET})."
+       echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${RESET}"
+       echo "That's all the help I can give you regarding port forwarding. Good luck!"
+       echo ""
+fi
 
 # ------------------- Step 9 - Health Check -------------------
  echo ''
@@ -588,5 +608,7 @@ sudo systemctl start nginx
  echo '*********************************************************'
  clboss --version
 echo ""
-echo -e "$BOLD$GREEN\nOkay, well that's everything!${RESET}\n\nAs long as everything worked properly, \
+echo -e "$BOLD\nOkay, well that's everything!${RESET}\n\nAs long as everything worked properly, \
 you should be ready to continue your journey\ntowards autonomy by opening ${BLUE}$ACCESS_POINT${RESET} in your browser."
+
+exit 0
