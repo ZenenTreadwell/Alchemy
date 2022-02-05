@@ -398,6 +398,8 @@ fi
      sudo cp resources/base.nginx.conf /etc/nginx/nginx.conf
  fi
 
+ sudo mkdir -p /etc/nginx/logs
+
  AO_NGINX_CONF=/etc/nginx/sites-available/ao
  sudo cp resources/ao.nginx.conf $AO_NGINX_CONF
  
@@ -413,7 +415,6 @@ fi
      sudo ln -s /etc/nginx/sites-available/ao /etc/nginx/sites-enabled/
  fi
  echo ""
- sudo systemctl reload nginx
  echo "Excellent! We've configured $AO_NGINX_CONF to serve your AO from $domain"
  echo ""
  
@@ -567,8 +568,6 @@ if [[ $OPEN -eq 0 ]]; then
 fi
 
 # ------------------- Step 9 - Health Check -------------------
- echo ''
- echo ''
  echo '*********************************************************'
  echo -e "*                  ${BOLD}Version Information${RESET}                  *"
  echo '*********************************************************'
@@ -610,5 +609,6 @@ fi
 echo ""
 echo -e "$BOLD\nOkay, well that's everything!${RESET}\n\nAs long as everything worked properly, \
 you should be ready to continue your journey\ntowards autonomy by opening ${BLUE}$ACCESS_POINT${RESET} in your browser."
+echo -e "The default login is ${BLUE}dctrl/dctrl${RESET}, have fun!"
 
 exit 0
