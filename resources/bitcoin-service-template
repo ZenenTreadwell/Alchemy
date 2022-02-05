@@ -1,34 +1,27 @@
 [Unit]                                                                                                                                                                                                           
-Description=Anonymizing overlay network for TCP (multi-instance-master)                                                                                                                                                       
-After=syslog.target network.target nss-lookup.target
+Description=Bitcoin daemon
+After=network.target
                                                                                                                                                                                                                               
 [Service]                                                                                                                                                                                                                     
 Type=notify                                                                                                                                                                                                                   
 NotifyAccess=all
-ExecStartPre=+/bin/chown USER:USER /var/lib/tor 
-ExecStartPre=TORPATH -f TORRCPATH --verify-config
-ExecStart=TORPATH -f TORRCPATH
+ExecStart=BITCOIND --daemon --server --pid=HOME/.bitcoin/bitcoind.pid
 
-ExecReload=/bin/kill -HUP ${MAINPID}
+Type=forking
+PIDFile=HOME/.bitcoin/bitcoind.pid
+Restart=on-failure
+
 KillSignal=SIGINT                                                                                                                                                                                                             
 TimeoutSec=60
-Restart=on-failure
 WatchdogSec=60
 LimitNOFILE=32768
-User=root                                                                                                                                                                                                                    
+User=USER                                                                                                                                                                                                                    
 Group=USER                                                                                                                                                                                                                   
                                                                                                                                                                                                                               
 # Hardening
 PrivateTmp=yes
 PrivateDevices=yes
-ProtectSystem=full
-ProtectHome=no
-ReadOnlyDirectories=/
-ReadWriteDirectories=-/var/lib/tor
-ReadWriteDirectories=-/var/log/tor
-ReadWriteDirectories=-HOME/.tor
-NoNewPrivileges=no
-CapabilityBoundingSet=CAP_SETUID CAP_SETGID CAP_NET_BIND_SERVICE CAP_DAC_READ_SEARCH
+MemoryDenyWriteExecute=true
                                                                                                                                                                                                                               
 [Install]                                                                                                                                                                                                                     
 WantedBy=multi-user.target

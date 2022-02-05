@@ -1,6 +1,6 @@
 network=bitcoin
-plugin=clboss
-log-level=debug:clboss
+#plugin=clboss
+#log-level=debug:clboss
 proxy=127.0.0.1:9050
 bind-addr=127.0.0.1:9735
 addr=statictor:127.0.0.1:9051

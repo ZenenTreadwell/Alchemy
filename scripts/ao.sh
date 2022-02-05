@@ -11,6 +11,9 @@ BOLD="\e[1m"
 ULINE="\e[4m"
 RESET="\e[0m"
 
+# Make sure that ctrl+C actually exits
+trap "exit" INT
+
 clear
 echo ''
 echo '       d8888  .d88888b.       8888888                   888             888 888                  '
@@ -35,10 +38,10 @@ echo -e "${ULINE}System Basics${RESET}"
 
 if [ -f "/etc/debian_version" ]; then
 	DISTRO="debian"
-	echo -e "Debian, Ubuntu, or Raspbian OS detected."
+	echo -e "${GREEN}Debian${RESET}, Ubuntu, or Raspbian OS detected."
 elif [ -f "/etc/arch-release" ]; then
 	DISTRO="arch"
-	echo -e "Arch- or Manjaro-based OS detected."
+	echo -e "${GREEN}Arch or Manjaro-based${RESET} OS detected."
 elif [ -f "/etc/fedora-release" ]; then
 	DISTRO="fedora"
 	echo -e "${GREEN}Fedora${RESET} detected as the Operating System"
@@ -46,7 +49,7 @@ elif [ $(uname | grep -c "Darwin") -eq 1 ]; then
 	DISTRO="mac"
 	echo -e "${GREEN}MacOS${RESET} detected."
 else
-	echo "I don't know what OS you're running! Cancelling this operation."
+	echo -e "I don't know ${RED}what OS you're running${RESET}! Cancelling this operation."
 	exit 1
 fi
 
@@ -59,20 +62,17 @@ elif [ $ARCHY == 'armv7l' ]; then
 fi
 
 echo ""
-
 export ALCHEMY_DISTRO=$DISTRO
 export ALCHEMY_ARCH=$ARCHY
-
 echo ""
 
 echo -e "Got it! Next we're going to make sure the system's repositories (where they get their data from)\nare updated and that you have all the basic command line utilities we need to continue. \n\n${BLUE}(enter)${RESET}" 
 read
 
-# This is a bash function!
-install_if_needed() {
+install_if_needed() { # Coding Moment: generally, whenever you see something with brackets at the end of it, like this() or like(this), it's a function! It takes inputs and gives outputs
     for package in "$@"
     do
-        if [ -z $(which $package) ]; then
+        if [ -z $(which $package 2>/dev/null) ]; then
             echo "installing" $package
 
             case $DISTRO in
@@ -80,7 +80,7 @@ install_if_needed() {
                     sudo apt install -y $package
                     ;;
                 "arch")
-                    sudo pacman -S $package
+                    sudo pacman -S $package --noconfirm --needed
                     ;;
                 "fedora")
                     sudo dnf install -y $package
@@ -105,7 +105,7 @@ case $DISTRO in
         sudo apt upgrade
         ;;
     "arch")
-        sudo pacman -Syu
+        #sudo pacman -Syu
         ;;
     "fedora")
         # sudo dnf update
@@ -122,27 +122,32 @@ echo -e "Making sure we've got the basics..."
 case $DISTRO in
     "debian")
         # Note -- I'm not sure if these are all needed but I'm not in the mood to check
-        install_if_needed git wget tor sqlite3 zlib1g-dev libtool-bin autoconf autoconf-archive automake autotools-dev \
+        install_if_needed git wget sqlite3 zlib1g-dev libtool-bin autoconf autoconf-archive automake autotools-dev \
         libgmp-dev libsqlite3-dev python python3 python3-mako libsodium-dev build-essential pkg-config libev-dev \
         libcurl4-gnutls-dev libssl-dev fakeroot devscripts
         ;;
     "arch")
-        # install_if_needed 
+        if [[ ! $(pacman -Qg base-devel) ]]; then
+            sudo pacman -S base-devel --noconfirm
+        fi
+
+        install_if_needed git wget sqlite3 python git gmp sqlite3 \
+            python-mako python-pip net-tools zlib libsodium gettext
         ;;
     "mac")
-        # install_if_needed
+        # install_if_needed better-computer
         ;;
     "fedora")
-        # install_if_needed git wget tor sqlite3 autoconf autoconf-archive automake \
-        # python python3 python3-mako pkg-config fakeroot devscripts
+        install_if_needed git wget tor sqlite3 autoconf autoconf-archive automake \
+        python python3 python3-mako pkg-config fakeroot devscripts
         ;;
 esac
 echo ""
-
-# ------------------- Step 2 - AO Environment Setup -------------------
-
+#
+## ------------------- Step 2 - AO Environment Setup -------------------
+#
 AO=''
-echo -e "Hey! You still there? I was wondering which ${BLUE}version of AO${RESET} you wanted to install. \n"
+echo -e "${BOLD}Hey!${RESET} You still there? I was wondering which ${BLUE}version of AO${RESET} you wanted to install. \n"
 echo -e "${BOLD}1.${RESET} ao-3 (Vue)"
 echo -e "${BOLD}2.${RESET} ao-react (React)"
 while [[ -z $AO ]]; do
@@ -154,10 +159,10 @@ while [[ -z $AO ]]; do
     case $ao_select in
         "1")
             echo "Minimalism, I like it! Proceeding with ao-3 installation"
-            AO=vue
+            AO=3
             ;;
         "2")
-            echo "The DCTRL special! Proceeding with ao-react installation"
+            echo "It's got community! Proceeding with ao-react installation"
             AO=react
             ;;
         *)
@@ -166,29 +171,31 @@ while [[ -z $AO ]]; do
     esac
 done;
 echo ""
-
-if [ $AO = "vue" ] || [ $AO = 'react' ]; then
-    echo -e "${BOLD}Installing Node.js${RESET}"
-    chmod +x scripts/nvm_install.sh
-    scripts/nvm_install.sh
-    if [ "$SHELL" = '/bin/zsh' ]; then
-        echo 'sourcing zshrc'
-        source ~/.zshrc
-    else
-        source ~/.bashrc
-    fi
-    nvm install v16.13.0
-    nvm alias default v16.13.0
-    if [ "$SHELL" = '/bin/zsh' ]; then
-        echo 'sourcing zshrc'
-        source ~/.zshrc
-    else
-        source ~/.bashrc
-    fi
-    echo ""
-fi
-
-if [ $AO = "vue" ] || [ $AO = 'react' ]; then
+#
+#if [ $AO = "3" ] || [ $AO = 'react' ]; then
+#    echo -e "${BOLD}Installing Node.js${RESET}"
+#    chmod +x scripts/nvm_install.sh
+#    scripts/nvm_install.sh
+#    if [ "$SHELL" = '/bin/zsh' ]; then
+#        echo 'sourcing zshrc'
+#        source ~/.zshrc
+#    else
+#        source ~/.bashrc
+#    fi
+#    nvm install v16.13.0
+#    nvm alias default v16.13.0
+#    if [ "$SHELL" = '/bin/zsh' ]; then
+#        echo 'sourcing zshrc'
+#        source ~/.zshrc
+#    else
+#        source ~/.bashrc
+#    fi
+#    echo ""
+#fi
+#
+#
+# TODO: Compile Bitcoin from C to make it resistant to changes in architecture (should work for ISA)
+if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Installing Bitcoin Ecosystem${RESET}"
     mkdir -p bitcoin
 
@@ -199,30 +206,40 @@ if [ $AO = "vue" ] || [ $AO = 'react' ]; then
     fi
 
     tar -xvf images/bitcoin-22.0*.tar.gz
+    sleep 1
 
     sudo cp bitcoin-22.0/bin/* /usr/local/bin/
+    rm -rf bitcoin-22.0
 
-    #echo 'Installing lightningd'
-    #git clone https://github.com/ElementsProject/lightning.git lightning
-    #cd lightning
+
+    #echo -e "${BOLD}Installing lightningd${RESET}"
+    #git clone https://github.com/ElementsProject/lightning.git ~/lightning
+    #pushd ~/lightning
     #git checkout v0.10.2
     #./configure
     #sudo make
     #sudo make install
-    #cd ..
+    #popd
 
+    # TODO fix clboss
     #echo 'Installing clboss'
-    #git clone https://github.com/ZmnSCPxj/clboss.git clboss
-    #cd clboss
+    #git clone https://github.com/ZmnSCPxj/clboss.git ~/clboss
+    #pushd ~/clboss
     #git checkout 0.11B
     #mkdir m4
     #autoreconf -i
     #./configure
     #make
     #sudo make install
-    #cd ..
+    #popd
 
+    echo ""
     echo -e "${BOLD}Bitcoin installed!${RESET} Let's make sure it's configured now."
+
+    AUTHDEETS=$(python3 scripts/rpcauth.py ao)                                                                                                                                                                                              
+    AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])                                                                                                                                                         
+    PASSLINE=$(echo $AUTHDEETS | grep -o [^[:space:]]*\$)                                                                                                                                                                             
+
     if  [ -f $HOME/.bitcoin/bitcoin.conf ]; then                                                                                                                                                                                      
         echo 'bitcoin config exists'                                                                                                                                                                                                    
     else                                                                                                                                                                                                                              
@@ -230,178 +247,176 @@ if [ $AO = "vue" ] || [ $AO = 'react' ]; then
         echo 'created default bitcoin config'                                                                                                                                                                                          
     fi                                                                                                                                                                                                                                
 
+    # TODO we should ask if they want to run in pruned mode
+    sed -i "s/BTC_LOGIN/${AUTHLINE}/" $HOME/.bitcoin/bitcoin.conf
+
+    mkdir -p $HOME/.lightning
+
     if  [ -f $HOME/.lightning/config ]; then                                                                                                                                                                                         
         echo 'lightning config exists'                                                                                                                                                                                                
     else                                                                                                                                                                                                                              
         cp resources/sample_lightning_config $HOME/.lightning/config                                                                                                                                                                          
         echo 'created default lightning config'                                                                                                                                                                                        
-    fi                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                      
-    AUTHDEETS=$(python3 ./rpcauth.py ao)                                                                                                                                                                                              
-    AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])                                                                                                                                                         
-    PASSLINE=$(echo $AUTHDEETS | grep -o [^[:space:]]*\$)                                                                                                                                                                             
-    echo $AUTHLINE >> $HOME/.bitcoin/bitcoin.conf  
+    fi                                                                                                                                                                                                                                      
+
 fi
 echo ''
 
-if [ $AO = "vue" ] || [ $AO = 'react' ]; then
+if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Installing and configuring Tor${RESET}\n"
     install_if_needed tor
 
-    TORRCPATH='/usr/local/etc/tor/torrc'
-    if [ ! -d "/usr/local/etc/tor" ];
-    then
-        sudo mkdir -p /usr/local/etc/tor
+    if [ -e /usr/local/etc/tor/torrc ]; then
+        TORRCPATH='/usr/local/etc/tor/torrc'
+    elif [ -e /etc/tor/torrc ]; then 
+        TORRCPATH='/etc/tor/torrc'
     fi
 
-    if [ ! -f $TORRCPATH ];
-    then
-        sudo echo "ControlPort 9051" >> $TORRCPATH
-        sudo echo "CookieAuthentication 1" >> $TORRCPATH
-        sudo chmod 666 $TORRCPATH # so controlport can modify . . . is this bad?
-    fi
+    TORRCPATH=
 
-    if [ $(cat $TORRCPATH | grep -c "HiddenServiceDir /var/lib/tor/ao") -eq 0 ];
-    then
-        echo "HiddenServiceDir /var/lib/tor/ao" | sudo tee -a $TORRCPATH 1>/dev/null 2>&1
-    fi
+    # Configure and write torrc file
+    cp resources/torrc-template .
+    sudo sed -i "s#USER#${USER}#g" torrc-template
+    sudo sed -i "s#HOME#${HOME}#g" torrc-template
 
-    if [ $(cat $TORRCPATH | grep -c "HiddenServicePort 80 127\.0\.0\.1:8003") -eq 0 ];
-    then
-        echo "HiddenServicePort 80 127.0.0.1:8003" | sudo tee -a $TORRCPATH 1>/dev/null 2>&1
+    if [ -n "$TORRCPATH" ]; then
+        sudo mv torrc-template $TORRCPATH
+    else
+        echo -e "${RED}Uh oh...${RESET} I couldn't figure out where your torrc file is. That might cause some issues"
+        sleep 3
+        echo -e "\nAnyways...\n"
+        sleep 2
     fi
-
-    if [ ! -d "/var/lib/tor" ];
-    then
-        sudo mkdir -p /var/lib/tor
-    fi
-
-    if [ ! -d "/var/lib/tor/ao" ];
-    then
-        sudo mkdir -p /var/lib/tor/ao
-    fi
-
-    sudo chown -R $USER:$USER /var/lib/tor
-    sudo chmod -R 700 /var/lib/tor
 fi
-
-# ------------------- Step 3 - AO Installation -------------------
-
+#
+## ------------------- Step 3 - AO Installation -------------------
+#
 echo -e "${BOLD}Configuring AO Core${RESET}\n"
 
-if [ -d $HOME/.ao ]; then                                                                                                                                                                                                        
-    echo 'default AO dir exists'                                                                                                                                                                                                
-else                                                                                                                                                                                                                              
-    mkdir $HOME/.ao                                                                                                                                                                                                               
-fi                                                                                                                                                                                                                                
+mkdir -p $HOME/.ao                                                                                                                                                                                                               
 
 if  [ -f $HOME/.ao/key ]; then                                                                                                                                                                                                   
-    echo 'ao privkey exists'                                                                                                                                                                                                      
+    echo 'We already have a private key for this AO, sweet!'                                                                                                                                                                                                      
 else                                                                                                                                                                                                                              
-    node ./createPrivateKey.js >> $HOME/.ao/key                                                                                                                                                                           
-    echo 'created ao privkey'                                                                                                                                                                                                     
+    node scripts/createPrivateKey.js >> $HOME/.ao/key                                                                                                                                                                           
+    echo -e "Just made a fresh private key and put it in ${GREEN}~/.ao${RESET}"                                                                                                                                                                                                     
 fi    
 
 echo ""
-case $AO in
-    "vue")
-        echo -e "Installing ${BLUE}ao-3${RESET}"
-        git clone 'https://github.com/AutonomousOrganization/ao-3.git' ~/ao-3
-        pushd ~/ao-3
-        npm install
-        npm run build
+# case $AO in
+#     "3")
+#         echo -e "Installing ${BLUE}ao-3${RESET}"
+#         git clone 'https://github.com/AutonomousOrganization/ao-3.git' ~/ao-3
+#         pushd ~/ao-3
+#         npm install
+#         npm run build
+# 
+#         if [ -f "$HOME/ao-3/configuration.js" ]; then                                                                                                                                                                             
+#             echo configuration.js already exists                                                                                                                                                                                      
+#         else                                                                                                                                                                                                                          
+#             cp resources/ao-config $HOME/ao-react/configuration.js
+#             sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $HOME/ao-react/configuration.js
+#             sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $HOME/ao-react/configuration.js
+#             sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $HOME/ao-react/configuration.js
+#         fi                                                                                                                                                                                                                            
+# 
+#         npm run checkconfig
+#         popd
+#         ;;
+#     "react")
+#         echo -e "Installing ${BLUE}ao-react${RESET}"
+#         git clone 'https://github.com/coalition-of-invisible-colleges/ao-react.git' ~/ao-react
+# 
+#                 
+#         # TODO process env bug during webpack
+#         pushd ~/ao-react
+#         npm install
+#         npm run webpack
+#         popd
+#         ;;
+# esac
 
-        if [ -f "$HOME/ao-3/configuration.js" ]; then                                                                                                                                                                             
-            echo configuration.js already exists                                                                                                                                                                                      
-        else                                                                                                                                                                                                                          
-            cp resources/ao-config $HOME/ao-react/configuration.js
-            sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $HOME/ao-react/configuration.js
-            sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $HOME/ao-react/configuration.js
-            sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $HOME/ao-react/configuration.js
-        fi                                                                                                                                                                                                                            
+# TODO this is kind of janky/fragile, it would be better to store this in ~/.ao
+CONFIG_FILE=$HOME/ao-$AO/configuration.js
 
-        npm run checkconfig
-        popd
-        ;;
-    "react")
-        echo -e "Installing ${BLUE}ao-react${RESET}"
-        git clone 'https://github.com/coalition-of-invisible-colleges/ao-react.git' ~/ao-react
+if [ -f "$CONFIG_FILE" ]; then                                                                                                                                                                             
+    echo configuration.js already exists                                                                                                                                                                                      
+else                                                                                                                                                                                                                          
+    cp resources/ao-config $CONFIG_FILE
+    sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $CONFIG_FILE
+    sed -i "s#PASSLINE#${PASSLINE}#" $CONFIG_FILE
+    sed -i "s#PRIVATEKEY#${HOME}/.ao/key#" $CONFIG_FILE
+    sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $CONFIG_FILE
+    sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $CONFIG_FILE
+fi                                                                                                                                                                                                                            
 
-        if [ -f "$HOME/ao-react/configuration.js" ]; then                                                                                                                                                                             
-            echo configuration.js already exists                                                                                                                                                                                      
-        else                                                                                                                                                                                                                          
-            cp resources/ao-config $HOME/ao-react/configuration.js
-            sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $HOME/ao-react/configuration.js
-            sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $HOME/ao-react/configuration.js
-            sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $HOME/ao-react/configuration.js
-        fi                                                                                                                                                                                                                            
-                
-        pushd ~/ao-react
-        npm install
-        npm run webpack
-        popd
-        ;;
-esac
+## ------------------- Step 4 - NGINX Setup -------------------
+#
+#echo ""
+#echo "We might need to query DNS records here..."
+#install_if_needed dig nginx
+#echo -e "You still there? I need to ask you some questions! \n\n${BLUE}(enter)${RESET}" 
+#read
+#echo ""
+#read -p "Do you have a domain name pointing to this computer? (y/n): " dns
+#echo ""
+#case $dns in
+#    y | Y)
+#        echo "Good to hear! What is it?"
+#        read -p "http://" domain
+#        ;;
+#    *)
+#        echo "Okay, let's just leave it open for now."
+#        domain=$(dig @resolver4.opendns.com myip.opendns.com +short)
+#        anywhere=1
+#        echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"
+#        ;;
+#esac
 
-# ------------------- Step 4 - NGINX Setup -------------------
-
-echo ""
-echo "We might need to query DNS records here..."
-install_if_needed dig
-echo -e "You still there? I need to ask you some questions! \n\n${BLUE}(enter)${RESET}" 
-read
-echo ""
-read -p "Do you have a domain name pointing to this computer? (y/n): " dns
-echo ""
-case $dns in
-    y | Y)
-        echo "Good to hear! What is it?"
-        read -p "http://" domain
-        ;;
-    *)
-        echo "Okay, let's just leave it open for now."
-        domain=$(dig @resolver4.opendns.com myip.opendns.com +short)
-        anywhere=1
-        echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"
-        ;;
-esac
-echo ""
-AO_NGINX_CONF=/etc/nginx/sites-available/ao
-sudo cp resources/ao.nginx.conf $AO_NGINX_CONF
-
-if [ -n $anywhere ]; then
-    sudo sed -i "s#SERVER_NAME#_#" $AO_NGINX_CONF
+anywhere=1 # TODO Remove this line
+if [ "$anywhere" -eq 1 ]; then
+    ACCESS_POINT=http://localhost:8003
 else
-    sudo sed -i "s#SERVER_NAME#${domain}#" $AO_NGINX_CONF
+    ACCESS_POINT=https://$domain
 fi
 
-sudo sed -i "s#FILE_ROOT#${HOME}/ao-react/dist#" $AO_NGINX_CONF
-sudo ln -s /etc/nginx/sites-available/ao /etc/nginx/sites-enabled/
-echo ""
-sudo systemctl reload nginx
-echo "Excellent! We've configured $AO_NGINX_CONF to serve your AO from $domain"
-echo ""
-
-read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 ssl
-echo ""
-case $ssl in
-    y | Y)
-	echo "Alright, let's get Certbot in here!"
-	install_if_needed python3 certbot python3-certbot-nginx
-	echo -e "${BOLD}Take it away, Certbot${NC}"
-	sudo certbot --nginx
-        ;;
-    *)
-	echo "Yea, SSL is lame anyways..."
-	;;
-esac
-echo ""
+#echo ""
+#AO_NGINX_CONF=/etc/nginx/sites-available/ao
+#sudo cp resources/ao.nginx.conf $AO_NGINX_CONF
+#
+#if [ -n $anywhere ]; then
+#    sudo sed -i "s#SERVER_NAME#_#" $AO_NGINX_CONF
+#else
+#    sudo sed -i "s#SERVER_NAME#${domain}#" $AO_NGINX_CONF
+#fi
+#
+#sudo sed -i "s#FILE_ROOT#${HOME}/ao-react/dist#" $AO_NGINX_CONF
+#sudo ln -s /etc/nginx/sites-available/ao /etc/nginx/sites-enabled/
+#echo ""
+#sudo systemctl reload nginx
+#echo "Excellent! We've configured $AO_NGINX_CONF to serve your AO from $domain"
+#echo ""
+#
+#read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 ssl
+#echo ""
+#case $ssl in
+#    y | Y)
+#	echo "Alright, let's get Certbot in here!"
+#	install_if_needed python3 certbot python3-certbot-nginx
+#	echo -e "${BOLD}Take it away, Certbot${NC}"
+#	sudo certbot --nginx
+#        ;;
+#    *)
+#	echo "Yea, SSL is lame anyways..."
+#	;;
+#esac
+#echo ""
 
 # ------------------- Step 7 - Systemd Setup -------------------
 
 READY=''
-echo -e "Alright, almost there! Now we just need to set up the system daemons for Tor, Bitcoin, Lightning, and the AO so that everything opens on startup."
-while [[ -z $AO ]]; do
+echo -e "\n${BOLD}Alright, almost there!${RESET} Now we just need to set up the system daemons for Tor, Bitcoin, Lightning, and the AO so that everything opens on startup."
+while [[ -z $READY ]]; do
     echo -en "${BLUE}You ready? (y/n):${RESET} "
     read -n1 ao_select 
     echo ""
@@ -409,111 +424,169 @@ while [[ -z $AO ]]; do
 
     case $ao_select in
         "y" | "Y")
-            echo "Nice, let's do it.\n"
+            echo -e "Nice, let's do it.\n"
             READY=1
             ;;
         *)
-            echo "wrong answer, fren\n\n"
+            echo -e "wrong answer, fren\n"
             ;;
     esac
 done
 
-echo "Creating tor.service..."
-TOR_SERVICE=/etc/systemd/system/tor.service
-if [ -f "$TOR_SERVICE" ]; then
-    echo "Seems like you've already got tor here!"
-else
-    sudo cp resources/tor-service-template $TOR_SERVICE
-    sudo sed -i "s#USER#${USER}#g" $TOR_SERVICE
-fi
-
-
-# ------------------- Step 8 - Health Check -------------------
-# ------------------- Step 9 - Port Testing -------------------
-
-echo -e "${BOLD}One more thing!${NC} We need to make sure that your ports are open."
-nmap -Pn $domain > nmap.txt
-OPEN=1
-if grep -qE "^80/.*(open|filtered)" nmap.txt; then
-	echo -e "I can see port ${GREEN}80${NC}!"
-else
-	echo -e "Uh oh, port ${RED}80${NC} isn't showing up..."
-	OPEN=0
-fi
-
-if grep -qE "^443/.*(open|filtered)" nmap.txt; then
-	echo -e "I can see port ${GREEN}443${NC} as well!"
-else
-	echo -e "Uh oh, port ${RED}443${NC} isn't showing up..."
-	OPEN=0
-fi
-rm nmap.txt
 echo ""
-if [[ $OPEN -eq 0 ]]; then
-	echo -e "${RED}Port configuration needed.${NC} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."
-       echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."
-       echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}$(ip route | grep default | grep -oP "(?<=src )[^ ]+")${NC})."
-       echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${NC}"
-       echo "That's all the help I can give you regarding port forwarding. Good luck!"
-       echo ""
+#echo "Creating tor.service..."
+#TOR_SERVICE=/etc/systemd/system/tor.service
+#if [ -f "$TOR_SERVICE" ]; then
+#    echo "Seems like you've already got tor here!"
+#else
+#    sudo cp resources/tor-service-template $TOR_SERVICE
+#
+#    # Making sure all values have been de-templated
+#    sudo sed -i "s#USER#${USER}#g" $TOR_SERVICE
+#    sudo sed -i "s#HOME#${HOME}#g" $TOR_SERVICE
+#    sudo sed -i "s#TORRCPATH#${TORRCPATH}#g" $TOR_SERVICE
+#    sudo sed -i "s#TORPATH#$(which tor)#g" $TOR_SERVICE
+#fi
+#
+#
+## Creating the .tor directory
+#sudo mkdir -p $HOME/.tor
+#sudo chown tor $HOME/.tor
+#sudo chgrp $USER $HOME/.tor
+#sudo chmod 770 $HOME/.tor
+#
+#echo "Enabling and starting Tor"
+#sudo systemctl enable tor
+#sudo systemctl start tor
+
+echo ""
+echo "Creating bitcoin.service..."
+BTC_SERVICE=/etc/systemd/system/bitcoin.service
+if [ -f "$BTC_SERVICE" ]; then
+    echo -e "Seems like you've already have a bitcoin service!"
+else
+    sudo cp resources/bitcoin-service-template $BTC_SERVICE
+
+    # Making sure all values have been de-templated
+    sudo sed -i "s#USER#${USER}#g" $BTC_SERVICE
+    sudo sed -i "s#HOME#${HOME}#g" $BTC_SERVICE
+    sudo sed -i "s#BITCOIND#$(which bitcoind)#g" $BTC_SERVICE
 fi
+echo -e "Enabling and starting ${GREEN}Bitcoin${RESET}"
+sudo systemctl enable bitcoin
+sudo systemctl start bitcoin 
 
-echo "Okay, well that's everything! As long as your ports are forwarded, you should be ready to continue your WordPress setup by opening $domain in your browser."
+echo ""
+echo "Creating lightning.service..."
+LN_SERVICE=/etc/systemd/system/lightning.service
+if [ -f "$LN_SERVICE" ]; then
+    echo -e "Seems like you've already have a lightning service!"
+else
+    sudo cp resources/lightning-service-template $LN_SERVICE
 
+    # Making sure all values have been de-templated
+    sudo sed -i "s#USER#${USER}#g" $LN_SERVICE
+    sudo sed -i "s#HOME#${HOME}#g" $LN_SERVICE
+    sudo sed -i "s#LIGHTNINGD#$(which lightningd)#g" $LN_SERVICE
+fi
+echo -e "Enabling and starting ${GREEN}lightning${RESET} "
+sudo systemctl enable lightning
+sudo systemctl start lightning 
 
-# echo ''
-# echo ''
-# echo '*********************************************************'
-# echo 'Version Information'
-# echo '*********************************************************'
-# 
-# echo ' '
-# echo 'make Version'
-# echo '*********************************************************'
-# make --version
-# 
-# echo ' '
-# echo 'node Version'
-# echo '*********************************************************'
-# node --version
-# 
-# echo ' '
-# echo 'sqlite3 Version'
-# echo '*********************************************************'
-# sqlite3 --version
-# 
-# echo ' '
-# echo 'tor Version'
-# echo '*********************************************************'
-# tor --version
-# 
-# echo ' '
-# echo 'bitcoind Version'
-# echo '*********************************************************'
-# bitcoind --version
-# 
-# echo ' '
-# echo 'lightningd Version'
-# echo '*********************************************************'
-# lightningd --version
-# 
-# echo ' '
-# echo 'clboss Version'
-# echo '*********************************************************'
-# clboss --version
-# 
-# echo ''
-# echo 'Execution completion'
-# date
-# echo ''
-# 
-# echo 'Lightning Node Installed Start via two terminals: '
-# echo '  bitcoind'
-# echo '  lightningd'
-# echo 'Can Proceed to AO-3 setup: '
-# echo '  git clone https://github.com/AutonomousOrganization/ao-3'
-# echo '  cd ao-3'
-# echo '  npm install'
-# echo '  npm run checkconfig'
-# echo '  npm build'
-# echo '  npm start'
+echo ""
+echo "Creating ao.service..."
+AO_SERVICE=/etc/systemd/system/ao.service
+if [ -f "$AO_SERVICE" ]; then
+    echo "Seems like you've already added one of these!"
+else
+    sudo cp resources/ao-service-template $AO_SERVICE
+
+    # Making sure all values have been de-templated
+    sudo sed -i "s#USER#${USER}#g" $AO_SERVICE
+    sudo sed -i "s#HOME#${HOME}#g" $AO_SERVICE
+    sudo sed -i "s#NODE#$(which node)#g" $AO_SERVICE
+fi
+echo -e "Enabling and starting the ${GREEN}AO${RESET}'s backend"
+sudo systemctl enable ao
+sudo systemctl start ao 
+
+echo ""
+echo "Enabling and starting ${GREEN}NGINX${RESET} as the webserver"
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+# ------------------- Step 8 - Port Testing -------------------
+
+#echo -e "${BOLD}One more thing!${RESET} We need to make sure that your ports are open."
+#install_if_needed nmap
+#nmap -Pn $domain > nmap.txt
+#OPEN=1
+#if grep -qE "^80/.*(open|filtered)" nmap.txt; then
+#	echo -e "I can see port ${GREEN}80${RESET}!"
+#else
+#	echo -e "Uh oh, port ${RED}80${RESET} isn't showing up..."
+#	OPEN=0
+#fi
+#
+#if grep -qE "^443/.*(open|filtered)" nmap.txt; then
+#	echo -e "I can see port ${GREEN}443${RESET} as well!"
+#else
+#	echo -e "Uh oh, port ${RED}443${RESET} isn't showing up..."
+#	OPEN=0
+#fi
+#rm nmap.txt
+#echo ""
+#if [[ $OPEN -eq 0 ]]; then
+#	echo -e "${RED}Port configuration needed.${RESET} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."
+#       echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."
+#       echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}$(ip route | grep default | grep -oP "(?<=src )[^ ]+")${RESET})."
+#       echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${RESET}"
+#       echo "That's all the help I can give you regarding port forwarding. Good luck!"
+#       echo ""
+#fi
+#
+
+# ------------------- Step 9 - Health Check -------------------
+ echo ''
+ echo ''
+ echo '*********************************************************'
+ echo -e "*                  ${BOLD}Version Information${RESET}                  *"
+ echo '*********************************************************'
+ 
+ echo ' '
+ echo 'make Version'
+ echo '*********************************************************'
+ make --version
+ 
+ echo ' '
+ echo 'node Version'
+ echo '*********************************************************'
+ node --version
+ 
+ echo ' '
+ echo 'sqlite3 Version'
+ echo '*********************************************************'
+ sqlite3 --version
+ 
+ echo ' '
+ echo 'tor Version'
+ echo '*********************************************************'
+ tor --version
+ 
+ echo ' '
+ echo 'bitcoind Version'
+ echo '*********************************************************'
+ bitcoind --version
+ 
+ echo ' '
+ echo 'lightningd Version'
+ echo '*********************************************************'
+ lightningd --version
+ 
+ echo ' '
+ echo 'clboss Version'
+ echo '*********************************************************'
+ clboss --version
+echo ""
+echo -e "$BOLD$GREEN\nOkay, well that's everything!${RESET}\n\nAs long as everything worked properly, \
+you should be ready to continue your journey\ntowards autonomy by opening ${BLUE}$ACCESS_POINT${RESET} in your browser."

@@ -1,25 +1,29 @@
 export default {                                                                                                                                                                                                  
     bitcoind: {                                                                                                                                                                                                               
-        network: 'mainnet'                                                                                                                                                                                                    
+        network: 'mainnet',
+        username: 'ao',
+        password: 'PASSLINE'
     },                                                                                                                                                                                                                        
     bitcoinAverage: {                                                                                                                                                                                                         
         pub: '',                                                                                                                                                                                                              
         secret: ''                                                                                                                                                                                                            
     },                                                                                                                                                                                                                        
-    sqlite3: {                                                                                                                                                                                                                
-        //file: '$HOME/.ao/database.sqlite3'                                                                                                                                                                                    
-        file: 'SQLITE_DATABASE'                                                                                                                                                                                    
-    },                                                                                                                                                                                                                        
     clightning: {                                                                                                                                                                                                             
-        //dir: '$HOME/.lightning/bitcoin'                                                                                                                                                                                       
+        // default is '~/.lightning/bitcoin'                                                                                                                                                                                       
         dir: 'CLIGHTNING_DIR'                                                                                                                                                                                       
     },                                                                                                                                                                                                                        
     tor: {                                                                                                                                                                                                                    
         //hostname: '$TORHOSTNAME'                                                                                                                                                                                              
         hostname: 'TOR_HOSTNAME'                                                                                                                                                                                              
     },                                                                                                                                                                                                                        
+    sqlite3: {                                                                                                                                                                                                                
+        // default is '~/.ao/database.sqlite3'
+        file: 'SQLITE_DATABASE'                                                                                                                                                                                    
+    },                                                                                                                                                                                                                        
+    hostnames: []
+    privateKey: 'PRIVATEKEY',
     memes: {                                                                                                                                                                                                                  
-        //dir: '$HOME/.ao/memes'                                                                                                                                                                                                
+        // default is  ~/.ao/memes'
         dir: 'MEMES_DIR'                                                                                                                                                                                                
     },                                                                                                                                                                                                                        
     jitsi: {                                                                                                                                                                                                                  

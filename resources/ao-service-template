@@ -1,0 +1,14 @@
+[Unit]
+Description=ao-daemon
+
+[Service]
+WorkingDirectory=HOME/ao-react
+ExecStart=NODE --experimental-specifier-resolution=node -r dotenv/config HOME/ao-react/src/server/app.js
+User=USER
+Type=simple
+Restart=on-failure
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
