@@ -1,18 +1,9 @@
 #!/bin/bash
 
 # Script for installing the base dependencies of AO and getting it running
-# Zen, 2022
+# Bare Metal Alchemist, 2022
 
-# Font decoration for better a e s t h e t i c
-RED="\e[0;31m"
-GREEN="\e[0;32m"
-BLUE="\e[0;34m"
-BOLD="\e[1m"
-ULINE="\e[4m"
-RESET="\e[0m"
-
-# Make sure that ctrl+C actually exits the script
-trap "exit" INT
+source scripts/ingredients
 
 clear
 echo ''
@@ -34,93 +25,94 @@ echo ""
 echo -e "This script is designed to ask you just enough questions to keep you involved in the process,\nwhile making it as easy as possible for you to get it going. \n\n${BLUE}press enter to continue${RESET}"
 read
 
-echo -e "${ULINE}System Basics${RESET}"
-
-if [ -f "/etc/debian_version" ]; then
-	DISTRO="debian"
-	echo -e "${GREEN}Debian${RESET}, Ubuntu, or Raspbian OS detected."
-elif [ -f "/etc/arch-release" ]; then
-	DISTRO="arch"
-	echo -e "${GREEN}Arch or Manjaro-based${RESET} OS detected."
-elif [ -f "/etc/fedora-release" ]; then
-	DISTRO="fedora"
-	echo -e "${GREEN}Fedora${RESET} detected as the Operating System"
-elif [ $(uname | grep -c "Darwin") -eq 1 ]; then
-	DISTRO="mac"
-	echo -e "${GREEN}MacOS${RESET} detected."
-else
-	echo -e "I don't know ${RED}what OS you're running${RESET}! Cancelling this operation."
-	exit 1
-fi
-
-ARCHY=$(uname -m)
-
-if [ $ARCHY == 'x86_64' ]; then
-	echo -e "Ayyy you got yourself an ${GREEN}x86${RESET} processor, cool"
-elif [ $ARCHY == 'armv7l' ]; then
-	echo -e "I see you rockin an ${GREEN}ARM${RESET} processor, neato"
-fi
-
-echo ""
-export ALCHEMY_DISTRO=$DISTRO
-export ALCHEMY_ARCH=$ARCHY
-echo ""
-
-echo -e "Got it! Next we're going to make sure the system's repositories (where they get their data from)\nare updated and that you have all the basic command line utilities we need to continue. \n\n${BLUE}(enter)${RESET}" 
-read
-
-# Coding Moment: generally, whenever you see something with brackets at the end of it,
-# like this() or like(this), it's a function! It takes inputs and gives outputs
-install_if_needed() { 
-    for package in "$@"
-    do
-        if [ -z $(which $package 2>/dev/null) ]; then
-            echo "installing" $package
-
-            case $DISTRO in
-                "debian")
-                    sudo apt install -y $package
-                    ;;
-                "arch")
-                    sudo pacman -S $package --noconfirm --needed
-                    ;;
-                "fedora")
-                    sudo dnf install -y $package
-                    ;;
-                "mac")
-                    brew install $package
-                    ;;
-            esac
-
-        else
-            echo $package 'already installed!'
-        fi
-    done
-}
-
-echo "Updating the repositories..."
-echo -e "(you'll probably need to input ${BLUE}your 'sudo' password${RESET} here)"
-case $DISTRO in
-    "debian")
-        sudo apt update
-        sudo apt autoremove
-        sudo apt upgrade
-        ;;
-    "arch")
-        sudo pacman -Syu
-        ;;
-    "fedora")
-        sudo dnf update
-        sudo dnf upgrade
-        ;;
-    "mac")
-        install
-        sudo brew update
-        ;;
-esac
-echo ""
+# echo -e "${ULINE}System Basics${RESET}"
+# 
+# if [ -f "/etc/debian_version" ]; then
+# 	DISTRO="debian"
+# 	echo -e "${GREEN}Debian${RESET}, Ubuntu, or Raspbian OS detected."
+# elif [ -f "/etc/arch-release" ]; then
+# 	DISTRO="arch"
+# 	echo -e "${GREEN}Arch or Manjaro-based${RESET} OS detected."
+# elif [ -f "/etc/fedora-release" ]; then
+# 	DISTRO="fedora"
+# 	echo -e "${GREEN}Fedora${RESET} detected as the Operating System"
+# elif [ $(uname | grep -c "Darwin") -eq 1 ]; then
+# 	DISTRO="mac"
+# 	echo -e "${GREEN}MacOS${RESET} detected."
+# else
+# 	echo -e "I don't know ${RED}what OS you're running${RESET}! Cancelling this operation."
+# 	exit 1
+# fi
+# 
+# ARCHY=$(uname -m)
+# 
+# if [ $ARCHY == 'x86_64' ]; then
+# 	echo -e "Ayyy you got yourself an ${GREEN}x86${RESET} processor, cool"
+# elif [ $ARCHY == 'armv7l' ]; then
+# 	echo -e "I see you rockin an ${GREEN}ARM${RESET} processor, neato"
+# fi
+# 
+# echo ""
+# export ALCHEMY_DISTRO=$DISTRO
+# export ALCHEMY_ARCH=$ARCHY
+# echo ""
+# 
+# echo -e "Got it! Next we're going to make sure the system's repositories (where they get their data from)\nare updated and that you have all the basic command line utilities we need to continue. \n\n${BLUE}(enter)${RESET}" 
+# read
+# 
+# # Coding Moment: generally, whenever you see something with brackets at the end of it, like this()
+# # or like(this), it's a function! It takes inputs and gives (or does) something as an output
+# install_if_needed() { 
+#     for package in "$@"
+#     do
+#         if [ -z $(which $package 2>/dev/null) ]; then
+#             echo "installing" $package
+# 
+#             case $DISTRO in
+#                 "debian")
+#                     sudo apt install -y $package
+#                     ;;
+#                 "arch")
+#                     sudo pacman -S $package --noconfirm --needed
+#                     ;;
+#                 "fedora")
+#                     sudo dnf install -y $package
+#                     ;;
+#                 "mac")
+#                     brew install $package
+#                     ;;
+#             esac
+# 
+#         else
+#             echo $package 'already installed!'
+#         fi
+#     done
+# }
+# 
+# echo "Updating the repositories..."
+# echo -e "(you'll probably need to input ${BLUE}your 'sudo' password${RESET} here)"
+# case $DISTRO in
+#     "debian")
+#         sudo apt update
+#         sudo apt autoremove
+#         sudo apt upgrade
+#         ;;
+#     "arch")
+#         sudo pacman -Syu
+#         ;;
+#     "fedora")
+#         sudo dnf update
+#         sudo dnf upgrade
+#         ;;
+#     "mac")
+#         install
+#         sudo brew update
+#         ;;
+# esac
+# echo ""
 
 echo -e "Making sure we've got the basics..."
+echo -e "(you'll probably need to input ${BLUE}your 'sudo' password${RESET} here)"
 case $DISTRO in
     "debian")
         # Note -- I'm not sure if these are all needed but I'm not in the mood to check
@@ -133,8 +125,8 @@ case $DISTRO in
             sudo pacman -S base-devel --noconfirm
         fi
 
-        install_if_needed wget python git gmp sqlite3 \
-            python-mako python-pip net-tools zlib libsodium gettext
+        install_if_needed wget python gmp sqlite3 \
+            python-mako python-pip net-tools zlib libsodium gettext dnsutil nginx
         ;;
     "mac")
         # install_if_needed better-computer
@@ -149,7 +141,7 @@ echo ""
 ## ------------------- Step 2 - AO Environment Setup -------------------
 #
 AO=''
-echo -e "${BOLD}Hey!${RESET} You still there? I was wondering which ${BLUE}version of AO${RESET} you wanted to install. \n"
+echo -e "${BOLD}Hey!${RESET} I was wondering which ${BLUE}version of AO${RESET} you wanted to install. \n"
 echo -e "${BOLD}1.${RESET} ao-3 (Vue)"
 echo -e "${BOLD}2.${RESET} ao-react (React)"
 while [[ -z $AO ]]; do
@@ -178,6 +170,11 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Installing Node.js${RESET}"
     chmod +x scripts/nvm_install.sh
     scripts/nvm_install.sh
+
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
     if [ "$SHELL" = '/bin/zsh' ]; then
         echo 'sourcing zshrc'
         source ~/.zshrc
@@ -186,24 +183,17 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     fi
     nvm install v16.13.0
     nvm alias default v16.13.0
-    if [ "$SHELL" = '/bin/zsh' ]; then
-        echo 'sourcing zshrc'
-        source ~/.zshrc
-    else
-        source ~/.bashrc
-    fi
-    echo ""
+    nvm use default
 fi
 
 
-# TODO: Compile Bitcoin from C to make it resistant to changes in architecture (should work for any ISA)
+# Note, it would be a good idea to compile Bitcoin from C to make it resistant to changes in architecture (should work for any ISA)
 if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Installing Bitcoin Ecosystem${RESET}"
-    mkdir -p bitcoin
 
-    if [ $ALCHEMY_ARCH == 'x86_64' ] && [ ! -e images/bitcoin-22.0* ]; then
+    if [ $ISA == 'x86_64' ] && [ ! -e images/bitcoin-22.0* ]; then
         wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0-x86_64-linux-gnu.tar.gz -P images/
-    elif [ $ALCHEMY_ARCH == 'armv7l' ] && [ ! -e images/bitcoin-22.0* ]; then
+    elif [ $ISA == 'armv7l' ] && [ ! -e images/bitcoin-22.0* ]; then
         wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0-arm-linux-gnueabihf.tar.gz -P images/
     fi
 
@@ -219,6 +209,10 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     pushd ~/lightning
     git checkout v0.10.2
     ./configure
+
+    # The latest version of mistune breaks lightning install
+    pip uninstall mistune
+    pip install --user mistune==0.8.4
     sudo make
     sudo make install
     popd
@@ -237,6 +231,7 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
 
     echo ""
     echo -e "${BOLD}Bitcoin installed!${RESET} Let's make sure it's configured now."
+    mkdir -p ~/.bitcoin
 
     AUTHDEETS=$(python3 scripts/rpcauth.py ao)                                                                                                                                                                                              
     AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])                                                                                                                                                         
@@ -363,8 +358,6 @@ fi
 # ------------------- Step 4 - NGINX Setup -------------------
 
  echo ""
- echo "We might need to query DNS records here..."
- install_if_needed dig nginx
  echo -e "You still there? I need to ask you some questions! \n\n${BLUE}(enter)${RESET}" 
  read
  echo ""

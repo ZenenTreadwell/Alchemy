@@ -8,7 +8,7 @@ After=network.target
 [Service]                                                                                                                                                                                                                     
 Type=forking                                                                                                                                                                                                                   
 NotifyAccess=all
-ExecStart=LIGHTNINGD --conf HOME/.lightning/config --pid-file=HOME/.lightning/lightningd.pid
+ExecStart=LIGHTNINGD --daemon --log-file HOME/.lightning/log --conf HOME/.lightning/config --pid-file=HOME/.lightning/lightningd.pid
 User=USER
 Group=USER
 Type=forking
