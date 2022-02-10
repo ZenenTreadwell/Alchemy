@@ -25,92 +25,6 @@ echo ""
 echo -e "This script is designed to ask you just enough questions to keep you involved in the process,\nwhile making it as easy as possible for you to get it going. \n\n${BLUE}press enter to continue${RESET}"
 read
 
-# echo -e "${ULINE}System Basics${RESET}"
-#
-# if [ -f "/etc/debian_version" ]; then
-# 	DISTRO="debian"
-# 	echo -e "${GREEN}Debian${RESET}, Ubuntu, or Raspbian OS detected."
-# elif [ -f "/etc/arch-release" ]; then
-# 	DISTRO="arch"
-# 	echo -e "${GREEN}Arch or Manjaro-based${RESET} OS detected."
-# elif [ -f "/etc/fedora-release" ]; then
-# 	DISTRO="fedora"
-# 	echo -e "${GREEN}Fedora${RESET} detected as the Operating System"
-# elif [ $(uname | grep -c "Darwin") -eq 1 ]; then
-# 	DISTRO="mac"
-# 	echo -e "${GREEN}MacOS${RESET} detected."
-# else
-# 	echo -e "I don't know ${RED}what OS you're running${RESET}! Cancelling this operation."
-# 	exit 1
-# fi
-#
-# ARCHY=$(uname -m)
-#
-# if [ $ARCHY == 'x86_64' ]; then
-# 	echo -e "Ayyy you got yourself an ${GREEN}x86${RESET} processor, cool"
-# elif [ $ARCHY == 'armv7l' ]; then
-# 	echo -e "I see you rockin an ${GREEN}ARM${RESET} processor, neato"
-# fi
-#
-# echo ""
-# export ALCHEMY_DISTRO=$DISTRO
-# export ALCHEMY_ARCH=$ARCHY
-# echo ""
-#
-# echo -e "Got it! Next we're going to make sure the system's repositories (where they get their data from)\nare updated and that you have all the basic command line utilities we need to continue. \n\n${BLUE}(enter)${RESET}"
-# read
-#
-# # Coding Moment: generally, whenever you see something with brackets at the end of it, like this()
-# # or like(this), it's a function! It takes inputs and gives (or does) something as an output
-# install_if_needed() {
-#     for package in "$@"
-#     do
-#         if [ -z $(which $package 2>/dev/null) ]; then
-#             echo "installing" $package
-#
-#             case $DISTRO in
-#                 "debian")
-#                     sudo apt install -y $package
-#                     ;;
-#                 "arch")
-#                     sudo pacman -S $package --noconfirm --needed
-#                     ;;
-#                 "fedora")
-#                     sudo dnf install -y $package
-#                     ;;
-#                 "mac")
-#                     brew install $package
-#                     ;;
-#             esac
-#
-#         else
-#             echo $package 'already installed!'
-#         fi
-#     done
-# }
-#
-# echo "Updating the repositories..."
-# echo -e "(you'll probably need to input ${BLUE}your 'sudo' password${RESET} here)"
-# case $DISTRO in
-#     "debian")
-#         sudo apt update
-#         sudo apt autoremove
-#         sudo apt upgrade
-#         ;;
-#     "arch")
-#         sudo pacman -Syu
-#         ;;
-#     "fedora")
-#         sudo dnf update
-#         sudo dnf upgrade
-#         ;;
-#     "mac")
-#         install
-#         sudo brew update
-#         ;;
-# esac
-# echo ""
-
 echo -e "Making sure we've got the basics..."
 echo -e "(you'll probably need to input ${BLUE}your 'sudo' password${RESET} here)"
 case $DISTRO in
@@ -213,6 +127,7 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     # The latest version of mistune breaks lightning install
     pip uninstall mistune
     pip install --user mistune==0.8.4
+    pip install --user mrkd
     sudo make
     sudo make install
     popd
@@ -312,22 +227,22 @@ fi
 # TODO this is really janky/fragile, it would be better to store this in ~/.ao
 CONFIG_FILE=$HOME/ao-$AO/configuration.js
 
-if [ -f "$CONFIG_FILE" ]; then
-    echo configuration.js already exists
-else
-    cp resources/ao-config $CONFIG_FILE
-    sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $CONFIG_FILE
-    sed -i "s#PASSLINE#${PASSLINE}#" $CONFIG_FILE
-    sed -i "s#PRIVATEKEY#${HOME}/.ao/key#" $CONFIG_FILE
-    sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $CONFIG_FILE
-    sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $CONFIG_FILE
-fi
-
-echo ""
 case $AO in
     "3")
         echo -e "Installing ${BLUE}ao-3${RESET}"
         git clone 'https://github.com/AutonomousOrganization/ao-3.git' ~/ao-3
+        if [ -f "$CONFIG_FILE" ]; then
+            echo configuration.js already exists
+        else
+            cp resources/ao-config $CONFIG_FILE
+            sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $CONFIG_FILE
+            sed -i "s#PASSLINE#${PASSLINE}#" $CONFIG_FILE
+            sed -i "s#PRIVATEKEY#${HOME}/.ao/key#" $CONFIG_FILE
+            sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $CONFIG_FILE
+            sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $CONFIG_FILE
+        fi
+
+        echo ""
         pushd ~/ao-3
         npm install
         npm run build
@@ -337,6 +252,19 @@ case $AO in
     "react")
         echo -e "Installing ${BLUE}ao-react${RESET}"
         git clone 'https://github.com/coalition-of-invisible-colleges/ao-react.git' ~/ao-react
+        if [ -f "$CONFIG_FILE" ]; then
+            echo configuration.js already exists
+        else
+            cp resources/ao-config $CONFIG_FILE
+            sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $CONFIG_FILE
+            sed -i "s#PASSLINE#${PASSLINE}#" $CONFIG_FILE
+            sed -i "s#PRIVATEKEY#${HOME}/.ao/key#" $CONFIG_FILE
+            sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $CONFIG_FILE
+            sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $CONFIG_FILE
+        fi
+
+        echo ""
+
         pushd ~/ao-react
         npm install
         npm run webpack
