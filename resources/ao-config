@@ -1,35 +1,35 @@
-export default {                                                                                                                                                                                                  
-    bitcoind: {                                                                                                                                                                                                               
+export default {
+    bitcoind: {
         network: 'mainnet',
         username: 'ao',
         password: 'PASSLINE'
-    },                                                                                                                                                                                                                        
-    bitcoinAverage: {                                                                                                                                                                                                         
-        pub: '',                                                                                                                                                                                                              
-        secret: ''                                                                                                                                                                                                            
-    },                                                                                                                                                                                                                        
-    clightning: {                                                                                                                                                                                                             
-        // default is '~/.lightning/bitcoin'                                                                                                                                                                                       
-        dir: 'CLIGHTNING_DIR'                                                                                                                                                                                       
-    },                                                                                                                                                                                                                        
-    tor: {                                                                                                                                                                                                                    
-        //hostname: '$TORHOSTNAME'                                                                                                                                                                                              
-        hostname: 'TOR_HOSTNAME'                                                                                                                                                                                              
-    },                                                                                                                                                                                                                        
-    sqlite3: {                                                                                                                                                                                                                
+    },
+    bitcoinAverage: {
+        pub: '',
+        secret: ''
+    },
+    clightning: {
+        // default is '~/.lightning/bitcoin'
+        dir: 'CLIGHTNING_DIR'
+    },
+    tor: {
+        //hostname: '$TORHOSTNAME'
+        hostname: 'TOR_HOSTNAME'
+    },
+    sqlite3: {
         // default is '~/.ao/database.sqlite3'
-        file: 'SQLITE_DATABASE'                                                                                                                                                                                    
-    },                                                                                                                                                                                                                        
-    hostnames: []
+        file: 'SQLITE_DATABASE'
+    },
+    hostnames: [],
     privateKey: 'PRIVATEKEY',
-    memes: {                                                                                                                                                                                                                  
+    memes: {
         // default is  ~/.ao/memes'
-        dir: 'MEMES_DIR'                                                                                                                                                                                                
-    },                                                                                                                                                                                                                        
-    jitsi: {                                                                                                                                                                                                                  
-        domain: 'meet.dctrl.ca'                                                                                                                                                                                               
-    },                                                                                                                                                                                                                        
-    socketUrl: 'http://localhost:8003' // development                                                                                                                                                                         
-    // socketUrl: null // production                                                                                                                                                                                          
-}                                                                                                                                                                                                                           
-        
+        dir: 'MEMES_DIR'
+    },
+    jitsi: {
+        domain: 'meet.dctrl.ca'
+    },
+    socketUrl: 'http://localhost:8003' // development
+    // socketUrl: null // production
+}
+

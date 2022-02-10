@@ -1,9 +1,9 @@
-[Unit]                                                                                                                                                                                                           
+[Unit]
 Description=Bitcoin daemon
 After=network.target
-                                                                                                                                                                                                                              
-[Service]                                                                                                                                                                                                                     
-Type=notify                                                                                                                                                                                                                   
+
+[Service]
+Type=notify
 NotifyAccess=all
 ExecStart=BITCOIND --daemon --server --pid=HOME/.bitcoin/bitcoind.pid
 
@@ -11,17 +11,17 @@ Type=forking
 PIDFile=HOME/.bitcoin/bitcoind.pid
 Restart=on-failure
 
-KillSignal=SIGINT                                                                                                                                                                                                             
+KillSignal=SIGINT
 TimeoutSec=60
 WatchdogSec=60
 LimitNOFILE=32768
-User=USER                                                                                                                                                                                                                    
-Group=USER                                                                                                                                                                                                                   
-                                                                                                                                                                                                                              
+User=USER
+Group=USER
+
 # Hardening
 PrivateTmp=yes
 PrivateDevices=yes
 MemoryDenyWriteExecute=true
-                                                                                                                                                                                                                              
-[Install]                                                                                                                                                                                                                     
+
+[Install]
 WantedBy=multi-user.target

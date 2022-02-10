@@ -79,7 +79,7 @@ while [[ MATCH -eq 0 ]]; do
         sudo mariadb -e "CREATE DATABASE wordpress;"
         sudo mariadb -e "GRANT ALL ON wordpress.* TO '${USER}'@'localhost' IDENTIFIED BY '${pass}' WITH GRANT OPTION;"
         sudo mariadb -e "FLUSH PRIVILEGES;"
-    else 
+    else
         echo "Passwords did not match :("
         echo ""
     fi

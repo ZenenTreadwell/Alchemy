@@ -16,7 +16,7 @@ echo '  d88P   888 888     888        888   888  888 "Y8888b. 888    .d888888 88
 echo ' d8888888888 Y88b. .d88P        888   888  888      X88 Y88b.  888  888 888 888 Y8b.     888     '
 echo 'd88P     888  "Y88888P"       8888888 888  888  88888P"  "Y888 "Y888888 888 888  "Y8888  888     '
 echo ''
-                                                                                                 
+
 
 # ------------------- Step 1 - Baseline Setup -------------------
 
@@ -26,7 +26,7 @@ echo -e "This script is designed to ask you just enough questions to keep you in
 read
 
 # echo -e "${ULINE}System Basics${RESET}"
-# 
+#
 # if [ -f "/etc/debian_version" ]; then
 # 	DISTRO="debian"
 # 	echo -e "${GREEN}Debian${RESET}, Ubuntu, or Raspbian OS detected."
@@ -43,31 +43,31 @@ read
 # 	echo -e "I don't know ${RED}what OS you're running${RESET}! Cancelling this operation."
 # 	exit 1
 # fi
-# 
+#
 # ARCHY=$(uname -m)
-# 
+#
 # if [ $ARCHY == 'x86_64' ]; then
 # 	echo -e "Ayyy you got yourself an ${GREEN}x86${RESET} processor, cool"
 # elif [ $ARCHY == 'armv7l' ]; then
 # 	echo -e "I see you rockin an ${GREEN}ARM${RESET} processor, neato"
 # fi
-# 
+#
 # echo ""
 # export ALCHEMY_DISTRO=$DISTRO
 # export ALCHEMY_ARCH=$ARCHY
 # echo ""
-# 
-# echo -e "Got it! Next we're going to make sure the system's repositories (where they get their data from)\nare updated and that you have all the basic command line utilities we need to continue. \n\n${BLUE}(enter)${RESET}" 
+#
+# echo -e "Got it! Next we're going to make sure the system's repositories (where they get their data from)\nare updated and that you have all the basic command line utilities we need to continue. \n\n${BLUE}(enter)${RESET}"
 # read
-# 
+#
 # # Coding Moment: generally, whenever you see something with brackets at the end of it, like this()
 # # or like(this), it's a function! It takes inputs and gives (or does) something as an output
-# install_if_needed() { 
+# install_if_needed() {
 #     for package in "$@"
 #     do
 #         if [ -z $(which $package 2>/dev/null) ]; then
 #             echo "installing" $package
-# 
+#
 #             case $DISTRO in
 #                 "debian")
 #                     sudo apt install -y $package
@@ -82,13 +82,13 @@ read
 #                     brew install $package
 #                     ;;
 #             esac
-# 
+#
 #         else
 #             echo $package 'already installed!'
 #         fi
 #     done
 # }
-# 
+#
 # echo "Updating the repositories..."
 # echo -e "(you'll probably need to input ${BLUE}your 'sudo' password${RESET} here)"
 # case $DISTRO in
@@ -126,7 +126,7 @@ case $DISTRO in
         fi
 
         install_if_needed wget python gmp sqlite3 \
-            python-mako python-pip net-tools zlib libsodium gettext dnsutil nginx
+            python-mako python-pip net-tools zlib libsodium gettext dnsutils nginx
         ;;
     "mac")
         # install_if_needed better-computer
@@ -146,7 +146,7 @@ echo -e "${BOLD}1.${RESET} ao-3 (Vue)"
 echo -e "${BOLD}2.${RESET} ao-react (React)"
 while [[ -z $AO ]]; do
     echo -en "${BLUE}(number):${RESET} "
-    read -n1 ao_select 
+    read -n1 ao_select
     echo ""
     echo ""
 
@@ -233,16 +233,16 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Bitcoin installed!${RESET} Let's make sure it's configured now."
     mkdir -p ~/.bitcoin
 
-    AUTHDEETS=$(python3 scripts/rpcauth.py ao)                                                                                                                                                                                              
-    AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])                                                                                                                                                         
-    PASSLINE=$(echo $AUTHDEETS | grep -o [^[:space:]]*\$)                                                                                                                                                                             
+    AUTHDEETS=$(python3 scripts/rpcauth.py ao)
+    AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])
+    PASSLINE=$(echo $AUTHDEETS | grep -o [^[:space:]]*\$)
 
-    if  [ -f $HOME/.bitcoin/bitcoin.conf ]; then                                                                                                                                                                                      
-        echo 'bitcoin config exists'                                                                                                                                                                                                    
-    else                                                                                                                                                                                                                              
-        cp resources/sample_bitcoin.conf $HOME/.bitcoin/bitcoin.conf                                                                                                                                                                          
-        echo 'created default bitcoin config'                                                                                                                                                                                          
-    fi                                                                                                                                                                                                                                
+    if  [ -f $HOME/.bitcoin/bitcoin.conf ]; then
+        echo 'bitcoin config exists'
+    else
+        cp resources/sample_bitcoin.conf $HOME/.bitcoin/bitcoin.conf
+        echo 'created default bitcoin config'
+    fi
 
     sed -i "s/BTC_LOGIN/${AUTHLINE}/" $HOME/.bitcoin/bitcoin.conf
 
@@ -262,12 +262,12 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
 
     mkdir -p $HOME/.lightning
 
-    if  [ -f $HOME/.lightning/config ]; then                                                                                                                                                                                         
-        echo 'lightning config exists'                                                                                                                                                                                                
-    else                                                                                                                                                                                                                              
-        cp resources/sample_lightning_config $HOME/.lightning/config                                                                                                                                                                          
-        echo 'created default lightning config'                                                                                                                                                                                        
-    fi                                                                                                                                                                                                                                      
+    if  [ -f $HOME/.lightning/config ]; then
+        echo 'lightning config exists'
+    else
+        cp resources/sample_lightning_config $HOME/.lightning/config
+        echo 'created default lightning config'
+    fi
 fi
 echo ''
 
@@ -277,7 +277,7 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
 
     if [ -e /usr/local/etc/tor/torrc ]; then
         TORRCPATH='/usr/local/etc/tor/torrc'
-    elif [ -e /etc/tor/torrc ]; then 
+    elif [ -e /etc/tor/torrc ]; then
         TORRCPATH='/etc/tor/torrc'
     fi
 
@@ -300,14 +300,28 @@ fi
 
 echo -e "${BOLD}Configuring AO Core${RESET}\n"
 
-mkdir -p $HOME/.ao                                                                                                                                                                                                               
+mkdir -p $HOME/.ao
 
-if  [ -f $HOME/.ao/key ]; then                                                                                                                                                                                                   
-    echo 'We already have a private key for this AO, sweet!'                                                                                                                                                                                                      
-else                                                                                                                                                                                                                              
-    node scripts/createPrivateKey.js >> $HOME/.ao/key                                                                                                                                                                           
-    echo -e "Just made a fresh private key and put it in ${GREEN}~/.ao${RESET}"                                                                                                                                                                                                     
-fi    
+if  [ -f $HOME/.ao/key ]; then
+    echo 'We already have a private key for this AO, sweet!'
+else
+    node scripts/createPrivateKey.js >> $HOME/.ao/key
+    echo -e "Just made a fresh private key and put it in ${GREEN}~/.ao${RESET}"
+fi
+
+# TODO this is really janky/fragile, it would be better to store this in ~/.ao
+CONFIG_FILE=$HOME/ao-$AO/configuration.js
+
+if [ -f "$CONFIG_FILE" ]; then
+    echo configuration.js already exists
+else
+    cp resources/ao-config $CONFIG_FILE
+    sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $CONFIG_FILE
+    sed -i "s#PASSLINE#${PASSLINE}#" $CONFIG_FILE
+    sed -i "s#PRIVATEKEY#${HOME}/.ao/key#" $CONFIG_FILE
+    sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $CONFIG_FILE
+    sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $CONFIG_FILE
+fi
 
 echo ""
 case $AO in
@@ -317,23 +331,12 @@ case $AO in
         pushd ~/ao-3
         npm install
         npm run build
-
-        if [ -f "$HOME/ao-3/configuration.js" ]; then                                                                                                                                                                             
-            echo configuration.js already exists                                                                                                                                                                                      
-        else                                                                                                                                                                                                                          
-            cp resources/ao-config $HOME/ao-react/configuration.js
-            sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $HOME/ao-react/configuration.js
-            sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $HOME/ao-react/configuration.js
-            sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $HOME/ao-react/configuration.js
-        fi                                                                                                                                                                                                                            
-
         npm run checkconfig
         popd
         ;;
     "react")
         echo -e "Installing ${BLUE}ao-react${RESET}"
         git clone 'https://github.com/coalition-of-invisible-colleges/ao-react.git' ~/ao-react
-                
         pushd ~/ao-react
         npm install
         npm run webpack
@@ -341,24 +344,10 @@ case $AO in
         ;;
 esac
 
-# TODO this is kind of janky/fragile, it would be better to store this in ~/.ao
-CONFIG_FILE=$HOME/ao-$AO/configuration.js
-
-if [ -f "$CONFIG_FILE" ]; then                                                                                                                                                                             
-    echo configuration.js already exists                                                                                                                                                                                      
-else                                                                                                                                                                                                                          
-    cp resources/ao-config $CONFIG_FILE
-    sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $CONFIG_FILE
-    sed -i "s#PASSLINE#${PASSLINE}#" $CONFIG_FILE
-    sed -i "s#PRIVATEKEY#${HOME}/.ao/key#" $CONFIG_FILE
-    sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $CONFIG_FILE
-    sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $CONFIG_FILE
-fi                                                                                                                                                                                                                            
-
 # ------------------- Step 4 - NGINX Setup -------------------
 
  echo ""
- echo -e "You still there? I need to ask you some questions! \n\n${BLUE}(enter)${RESET}" 
+ echo -e "You still there? I need to ask you some questions! \n\n${BLUE}(enter)${RESET}"
  read
  echo ""
  read -p "Do you have a domain name pointing to this computer? (y/n): " dns
@@ -375,13 +364,13 @@ fi
          echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"
          ;;
  esac
- 
+
  if [ "$anywhere" -eq 1 ]; then
      ACCESS_POINT=http://localhost
  else
      ACCESS_POINT=https://$domain
  fi
- 
+
  echo ""
 
  # Making sure this version of NGINX supports sites-enabled
@@ -395,13 +384,13 @@ fi
 
  AO_NGINX_CONF=/etc/nginx/sites-available/ao
  sudo cp resources/ao.nginx.conf $AO_NGINX_CONF
- 
+
  if [ -n $anywhere ]; then
      sudo sed -i "s#SERVER_NAME#_#" $AO_NGINX_CONF
  else
      sudo sed -i "s#SERVER_NAME#${domain}#" $AO_NGINX_CONF
  fi
- 
+
  sudo sed -i "s#FILE_ROOT#${HOME}/ao-react/dist#" $AO_NGINX_CONF
 
  if [ ! -e /etc/nginx/sites-enabled/ao ]; then
@@ -410,7 +399,7 @@ fi
  echo ""
  echo "Excellent! We've configured $AO_NGINX_CONF to serve your AO from $domain"
  echo ""
- 
+
  read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 ssl
  echo ""
  case $ssl in
@@ -432,7 +421,7 @@ READY=''
 echo -e "\n${BOLD}Alright, almost there!${RESET} Now we just need to set up the system daemons for Tor, Bitcoin, Lightning, and the AO so that everything opens on startup."
 while [[ -z $READY ]]; do
     echo -en "${BLUE}You ready? (y/n):${RESET} "
-    read -n1 ao_select 
+    read -n1 ao_select
     echo ""
     echo ""
 
@@ -488,7 +477,7 @@ else
 fi
 echo -e "Enabling and starting ${GREEN}Bitcoin${RESET}"
 sudo systemctl enable bitcoin
-sudo systemctl start bitcoin 
+sudo systemctl start bitcoin
 
 echo ""
 echo "Creating lightning.service..."
@@ -505,7 +494,7 @@ else
 fi
 echo -e "Enabling and starting ${GREEN}lightning${RESET} "
 sudo systemctl enable lightning
-sudo systemctl start lightning 
+sudo systemctl start lightning
 
 echo ""
 echo "Creating ao.service..."
@@ -522,7 +511,7 @@ else
 fi
 echo -e "Enabling and starting the ${GREEN}AO${RESET}'s backend"
 sudo systemctl enable ao
-sudo systemctl start ao 
+sudo systemctl start ao
 
 echo ""
 echo -e "Enabling and starting ${GREEN}NGINX${RESET} as the webserver"
@@ -564,37 +553,37 @@ fi
  echo '*********************************************************'
  echo -e "*                  ${BOLD}Version Information${RESET}                  *"
  echo '*********************************************************'
- 
+
  echo ' '
  echo 'make Version'
  echo '*********************************************************'
  make --version
- 
+
  echo ' '
  echo 'node Version'
  echo '*********************************************************'
  node --version
- 
+
  echo ' '
  echo 'sqlite3 Version'
  echo '*********************************************************'
  sqlite3 --version
- 
+
  echo ' '
  echo 'tor Version'
  echo '*********************************************************'
  tor --version
- 
+
  echo ' '
  echo 'bitcoind Version'
  echo '*********************************************************'
  bitcoind --version
- 
+
  echo ' '
  echo 'lightningd Version'
  echo '*********************************************************'
  lightningd --version
- 
+
  echo ' '
  echo 'clboss Version'
  echo '*********************************************************'

@@ -1,23 +1,23 @@
-[Unit]                                                                                                                                                                                                           
-Description=Anonymizing overlay network for TCP (multi-instance-master)                                                                                                                                                       
+[Unit]
+Description=Anonymizing overlay network for TCP (multi-instance-master)
 After=syslog.target network.target nss-lookup.target
-                                                                                                                                                                                                                              
-[Service]                                                                                                                                                                                                                     
-Type=notify                                                                                                                                                                                                                   
+
+[Service]
+Type=notify
 NotifyAccess=all
-ExecStartPre=+/bin/chown USER:USER /var/lib/tor 
+ExecStartPre=+/bin/chown USER:USER /var/lib/tor
 ExecStartPre=TORPATH -f TORRCPATH --verify-config
 ExecStart=TORPATH -f TORRCPATH
 
 ExecReload=/bin/kill -HUP ${MAINPID}
-KillSignal=SIGINT                                                                                                                                                                                                             
+KillSignal=SIGINT
 TimeoutSec=60
 Restart=on-failure
 WatchdogSec=60
 LimitNOFILE=32768
-User=root                                                                                                                                                                                                                    
-Group=USER                                                                                                                                                                                                                   
-                                                                                                                                                                                                                              
+User=root
+Group=USER
+
 # Hardening
 PrivateTmp=yes
 PrivateDevices=yes
@@ -29,6 +29,6 @@ ReadWriteDirectories=-/var/log/tor
 ReadWriteDirectories=-HOME/.tor
 NoNewPrivileges=no
 CapabilityBoundingSet=CAP_SETUID CAP_SETGID CAP_NET_BIND_SERVICE CAP_DAC_READ_SEARCH
-                                                                                                                                                                                                                              
-[Install]                                                                                                                                                                                                                     
+
+[Install]
 WantedBy=multi-user.target

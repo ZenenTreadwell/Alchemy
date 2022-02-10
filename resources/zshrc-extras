@@ -1,10 +1,10 @@
 # Extra Aliases
 alias b='cd ..'
-                                                                                                                                                                                                             
-# Checks for active tmux                                                                                                                                                                                     
-tmux ls &> /dev/null                                                                                                                                                                                         
-if [ $? -eq 0 ] && [ -z "$TMUX" ]; then                                                                                                                                                                      
-    echo "\nYou have an active tmux session! Run 'tmux attach' to restore it.\n"                                                                                                                                                              
+
+# Checks for active tmux
+tmux ls &> /dev/null
+if [ $? -eq 0 ] && [ -z "$TMUX" ]; then
+    echo "\nYou have an active tmux session! Run 'tmux attach' to restore it.\n"
 elif [ -z "$TMUX" ]; then
     tmux new -s "tmux"
-fi  
+fi

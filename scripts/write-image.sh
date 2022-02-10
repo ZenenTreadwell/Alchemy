@@ -74,7 +74,7 @@ esac
 echo ""
 echo -e "Getting ready to write ${GREEN}$image${NC} to ${BLUE}$target${NC}"
 echo ""
-read -p "Press Enter to continue (ctrl+C to cancel):" 
+read -p "Press Enter to continue (ctrl+C to cancel):"
 
 case $image in
     *.iso)

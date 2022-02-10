@@ -23,7 +23,7 @@ set expandtab
 
 " Searching -- press '/' to search in vim (or '?' to search backwards)
 set incsearch		" Highlights as you type
-set ignorecase		
+set ignorecase
 set smartcase		" ignore case, unless you capitalise
 set hlsearch
 set showmatch
