@@ -25,6 +25,14 @@ echo ""
 echo -e "This script is designed to ask you just enough questions to keep you involved in the process,\nwhile making it as easy as possible for you to get it going. \n\n${BLUE}press enter to continue${RESET}"
 read
 
+if [ "$EUID" -eq 0 ]; then
+    echo -e "${RED}Woah there!${RESET} Seems you're running this script as a superuser."
+    echo ""
+    echo "That might cause some issues with permissions and whatnot. Run this script as your default user (without sudo) and I'll ask you when I need superuser permissions"
+    echo ""
+    exit 1
+fi
+
 echo -e "Making sure we've got the basics..."
 echo -e "(you'll probably need to input ${BLUE}your 'sudo' password${RESET} here)"
 case $DISTRO in
@@ -248,6 +256,8 @@ case $AO in
         npm run build
         npm run checkconfig
         popd
+
+        NODE_PARAMS=''
         ;;
     "react")
         echo -e "Installing ${BLUE}ao-react${RESET}"
@@ -269,6 +279,8 @@ case $AO in
         npm install
         npm run webpack
         popd
+        
+        NODE_PARAMS='--experimental-specifier-resolution=node -r dotenv/config'
         ;;
 esac
 
@@ -436,6 +448,8 @@ else
     sudo sed -i "s#USER#${USER}#g" $AO_SERVICE
     sudo sed -i "s#HOME#${HOME}#g" $AO_SERVICE
     sudo sed -i "s#NODE#$(which node)#g" $AO_SERVICE
+    sudo sed -i "s#AO#${AO}#g" $AO_SERVICE
+    sudo sed -i "s#NODE_PARAMS#${NODE_PARAMS}#g" $AO_SERVICE
 fi
 echo -e "Enabling and starting the ${GREEN}AO${RESET}'s backend"
 sudo systemctl enable ao

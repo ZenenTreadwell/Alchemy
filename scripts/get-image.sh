@@ -17,12 +17,16 @@ RASPBIAN_IMAGE=2021-10-30-raspios-bullseye-arm64-lite.zip
 MANJARO_DOWNLOAD_LINK=https://download.manjaro.org/kde/21.2.1/manjaro-kde-21.2.1-220103-linux515.iso
 MANJARO_IMAGE=manjaro-kde-21.2.1-220103-linux515.iso
 
+UBUNTU_DOWNLOAD_LINK=https://releases.ubuntu.com/20.04.3/ubuntu-20.04.3-desktop-amd64.iso
+UBUNTU_IMAGE=ubuntu-20.04.3-desktop-amd64.iso
+UBUNTU_SHA256SUM="5fdebc435ded46ae99136ca875afc6f05bde217be7dd018e1841924f71db46b5  ubuntu-20.04.3-desktop-amd64.iso"
 
 echo -e "${BOLD}Ah, I see you're looking to download an image!${RESET}"
 echo ""
 echo -e "${ULINE}Which one?${RESET}"
 echo -e "${BOLD}1. ${RESET} Raspbian (arm64 image)"
 echo -e "${BOLD}2. ${RESET} Manjaro (x86_64 image)"
+echo -e "${BOLD}3. ${RESET} Ubuntu (x86_64 image)"
 echo ""
 
 IMAGE=
@@ -43,6 +47,12 @@ while [ -z $IMAGE ]; do
             DOWNLOAD_LINK=$MANJARO_DOWNLOAD_LINK
             IMAGE=$MANJARO_IMAGE
             ;;
+        3)
+            echo "Ubuntu selected!"
+            DOWNLOAD_LINK=$UBUNTU_DOWNLOAD_LINK
+            IMAGE=$UBUNTU_IMAGE
+            SHA256SUM=$UBUNTU_SHA256SUM
+            ;;
         *)
             echo "wait that doesn't make sense, try again"
             ;;
@@ -58,9 +68,14 @@ else
     curl -o images/$IMAGE $DOWNLOAD_LINK
 fi
 
-echo "Getting sha256sum and comparing..."
 cd images
-curl -so image.sha256 $DOWNLOAD_LINK.sha256
+if [[ -z $SHA256SUM ]]; then
+    echo "Getting sha256sum and comparing..."
+    curl -so image.sha256 $DOWNLOAD_LINK.sha256
+else
+    echo "${SHA256SUM}" > image.sha256
+fi
+
 sha256sum $IMAGE > computed.sha256
 diff image.sha256 computed.sha256
 

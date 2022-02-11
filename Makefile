@@ -4,7 +4,7 @@
 IMAGE := raspios_lite_arm64.zip
 DOWNLOAD_LINK := https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2021-11-08/2021-10-30-raspios-bullseye-arm64-lite.zip
 
-it-pretty:
+aesthetic:
 	@chmod +x scripts/init.sh
 	@scripts/init.sh
 

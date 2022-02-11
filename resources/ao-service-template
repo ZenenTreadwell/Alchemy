@@ -2,8 +2,8 @@
 Description=ao-daemon
 
 [Service]
-WorkingDirectory=HOME/ao-react
-ExecStart=NODE --experimental-specifier-resolution=node -r dotenv/config HOME/ao-react/src/server/app.js
+WorkingDirectory=HOME/ao-AO
+ExecStart=NODE NODE_PARAMS HOME/ao-AO/src/server/app.js
 User=USER
 Type=simple
 Restart=on-failure
