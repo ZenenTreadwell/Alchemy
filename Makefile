@@ -1,6 +1,6 @@
 # This Makefile exists because it's my favorite way to simplify running
 # groups of commands directly from the command line
-# -- Bare Metal Alchemist, 2022
+# Bare Metal Alchemist, 2022
 
 alchemy:
 	@chmod +x recipes/alchemy.sh
@@ -34,7 +34,7 @@ manifest:
 	@recipes/wordpress.sh
 
 help:
-	@echo "We'll get there!"
+	@cat README.md
 
 
 
