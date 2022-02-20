@@ -28,6 +28,9 @@ preparations:
 
 prosperity:
 	@echo "This will install prestashop eventually"
+
+free:
+	@echo "This will install freespace, once it exists"
 		
 manifest:
 	@chmod +x recipes/wordpress.sh
@@ -72,7 +75,7 @@ help:
 
 
 
-# This is just for fun! 
+# Extra stuff to make it fun
 something:
 	@echo "You might need to be a little more creative than that..."
 
