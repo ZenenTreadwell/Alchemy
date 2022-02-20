@@ -1,0 +1,95 @@
+#!/bin/sh
+# Bare Metal Alchemist, 2022
+
+############################################# 
+#                Lead - ♄                   # 
+############################################# 
+
+# The most basic ingredient in an Alchemy recipe, lead is used in all
+# recipes in this repository to standardize some simple things that I
+# rely on to make scripts concise and pleasant to use
+
+# --------------- Escape Codes ---------------
+# These constants are used to add color and text formatting to the
+# terminal's output -- Further reading: ANSI Escape Codes
+RED="\e[0;31m"
+GREEN="\e[0;32m"
+BLUE="\e[0;34m"
+BOLD="\e[1m"
+ULINE="\e[4m"
+RESET="\e[0m"
+
+# --------------- Traps ---------------
+
+# Traps, in the case of shell scripting, listen for certain signals 
+# that are broadcast by the system and execute a command in response
+
+# Make sure that ctrl+C consistently exits the script
+trap "exit" INT 
+
+# Give informative error messages when we receive ERR
+trap 'echo -e "${RED}Oops!${RESET} Something went wrong on line $LINENO of this script. Exit code was $?" >&2' ERR
+
+
+# --------------- Environment Setup ---------------
+
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+else
+    if [ -z $ALCHEMY ]; then
+        echo "No .env file, this might cause some issues..."
+    fi
+fi
+
+
+# --------------- Functions ---------------
+
+# Coding Moment: generally, whenever you see something with brackets
+# at the end of it, like this() or like(this), it's a function!
+# It takes inputs and gives (or does) something as an output
+
+# This one installs utilities to your OS (If you need them!)
+install_if_needed() {
+    for package in "$@" # $@ means "all the arguments you passed 
+    do
+
+        case $DISTRO in
+            "debian")
+                # TODO Better installation detection than "which"
+                if [ -z $(which $package 2>/dev/null) ]; then
+                    echo "installing" $package
+                    sudo apt install -y $package
+                else
+                    echo $package 'already installed!'
+                fi
+                ;;
+            "arch")
+                if pacman -Qi $package &>/dev/null; then
+                    echo $package 'already installed!'
+                else
+                    echo "installing" $package
+                    sudo pacman -S $package --noconfirm --needed
+                fi
+                ;;
+            "fedora")
+                # TODO Better installation detection than "which"
+                if [ -z $(which $package 2>/dev/null) ]; then
+                    echo "installing" $package
+                    sudo dnf install -y $package
+                else
+                    echo $package 'already installed!'
+                fi
+                ;;
+            "mac")
+                # TODO Better installation detection than "which"
+                if [ -z $(which $package 2>/dev/null) ]; then
+                    echo "installing" $package
+                    brew install $package
+                else
+                    echo $package 'already installed!'
+                fi
+                ;;
+        esac
+    done
+}
+

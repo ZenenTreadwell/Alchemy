@@ -1,20 +1,37 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-# This is the initialization script for Alchemy. We can't rely on all systems being able to use 'make' or other utilities by default.
+# This is the initialization script for Alchemy. 
+# We can't rely on all systems being able to use 'make' etc. by default.
 # This will ensure that everything is set up as needed.
 # Bare Metal Alchemist, 2022
 
-# This runs the ingredients script as part of this one,
-# making sure that some basic values / variables are defined
-source scripts/ingredients
+# Just to let the system know what we're doing...
+ALCHEMY="initializing"
 
-echo ""
+# 'sourcing' a script is essentially running it to set up your system,
+# making sure that some basic values / variables are defined
+source ingredients/lead
+
+clear
+echo -e "${BLUE}"
+echo -e "       d8888 888          888                                     " 
+echo -e "      d88888 888          888                                     " 
+echo -e "     d88P888 888          888                                     " 
+echo -e "    d88P 888 888  .d8888b 88888b.   .d88b.  88888b.d88b.  888  888" 
+echo -e "   d88P  888 888 d88P'    888 '88b d8P  Y8b 888 '888 '88b 888  888" 
+echo -e "  d88P   888 888 888      888  888 88888888 888  888  888 888  888" 
+echo -e " d8888888888 888 Y88b.    888  888 Y8b.     888  888  888 Y88b 888" 
+echo -e "d88P     888 888  'Y8888P 888  888  'Y8888  888  888  888  'Y88888" 
+echo -e "                                                               888" 
+echo -e "                  ${BOLD}Initialization Script -- BMA${BLUE}            Y8b d88P" 
+echo -e "${RESET}"
+
 echo -e "${GREEN}${ULINE}Environment${RESET}"
 if [ -f .env ]; then
     grep -v '^#' .env
     export $(grep -v '^#' .env | xargs)
 else
-    echo "No .env file found, initializing"
+    echo "No .env file found, let's initialize it"
     echo "ALCHEMY=true" > .env
 fi
 
@@ -54,6 +71,7 @@ if [[ ! $DISTRO ]]; then
     echo "DISTRO=$DISTRO" >> .env
 fi
 
+# TODO - Update intermittently (like if you haven't run it in a week? use date +%s and (($INT+$INT2))
 if [[ ! $UPDATED ]]; then
     echo ""
     echo "Updating the repositories..."
@@ -83,4 +101,7 @@ fi
 
 echo ""
 echo -e "${GREEN}${ULINE}Core Dependencies${RESET}"
-install_if_needed git wget
+install_if_needed git wget make
+
+echo ""
+echo -e "${BOLD}You're good to go!${RESET} Go ${BLUE}make something cool${RESET} :)"

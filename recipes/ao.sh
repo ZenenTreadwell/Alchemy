@@ -3,7 +3,7 @@
 # Script for installing the base dependencies of AO and getting it running
 # Bare Metal Alchemist, 2022
 
-source scripts/ingredients
+source ingredients/lead
 
 clear
 echo ''
@@ -17,12 +17,14 @@ echo ' d8888888888 Y88b. .d88P        888   888  888      X88 Y88b.  888  888 88
 echo 'd88P     888  "Y88888P"       8888888 888  888  88888P"  "Y888 "Y888888 888 888  "Y8888  888     '
 echo ''
 
-
 # ------------------- Step 1 - Baseline Setup -------------------
 
 echo -e "${BOLD}Hiya!${RESET} We're going to get you set up with your very own Autonomous Engine."
 echo ""
-echo -e "This script is designed to ask you just enough questions to keep you involved in the process,\nwhile making it as easy as possible for you to get it going. \n\n${BLUE}press enter to continue${RESET}"
+echo -e "This script is designed to ask you just enough questions to keep you involved in the process,"
+echo -e "while making it as easy as possible for you to get it going." 
+echo ""
+echo -e "${BLUE}press enter to continue${RESET}"
 read
 
 if [ "$EUID" -eq 0 ]; then
@@ -47,7 +49,7 @@ case $DISTRO in
             sudo pacman -S base-devel --noconfirm
         fi
 
-        install_if_needed wget python gmp sqlite3 \
+        install_if_needed wget python gmp sqlite3 autoconf-archive pkgconf libev \
             python-mako python-pip net-tools zlib libsodium gettext dnsutils nginx
         ;;
     "mac")
@@ -140,17 +142,17 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     sudo make install
     popd
 
-    # TODO fix clboss
-    # echo 'Installing clboss'
-    # git clone https://github.com/ZmnSCPxj/clboss.git ~/clboss
-    # pushd ~/clboss
-    # git checkout 0.11B
-    # mkdir m4
-    # autoreconf -i
-    # ./configure
-    # make
-    # sudo make install
-    # popd
+    TODO fix clboss
+    echo 'Installing clboss'
+    git clone https://github.com/ZmnSCPxj/clboss.git ~/clboss
+    pushd ~/clboss
+    git checkout 0.11B
+    mkdir m4
+    autoreconf -fi
+    ./configure
+    make
+    sudo make install
+    popd
 
     echo ""
     echo -e "${BOLD}Bitcoin installed!${RESET} Let's make sure it's configured now."

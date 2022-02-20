@@ -1,29 +1,80 @@
-# This Makefile exists because it's my favorite way to simplify running groups of commands directly from the command line
-#
-# Variables
-IMAGE := raspios_lite_arm64.zip
-DOWNLOAD_LINK := https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2021-11-08/2021-10-30-raspios-bullseye-arm64-lite.zip
+# This Makefile exists because it's my favorite way to simplify running
+# groups of commands directly from the command line
+# -- Bare Metal Alchemist, 2022
+
+alchemy:
+	@chmod +x recipes/alchemy.sh
+	@recipes/alchemy.sh
 
 aesthetic:
-	@chmod +x scripts/init.sh
-	@scripts/init.sh
+	@chmod +x recipes/init.sh
+	@recipes/init.sh
 
 autonomy:
-	@chmod +x scripts/ao.sh
-	@scripts/ao.sh
+	@chmod +x recipes/ao.sh
+	@recipes/ao.sh
 
 acquisition:
-	@chmod +x scripts/get-image.sh
-	@scripts/get-image.sh
+	@chmod +x recipes/get-image.sh
+	@recipes/get-image.sh
 
 imbuement:
-	@chmod +x scripts/write-image.sh
-	@scripts/write-image.sh
+	@chmod +x recipes/write-image.sh
+	@recipes/write-image.sh
 
 preparations:
-	@chmod +x scripts/prep-rpi-usb.sh
-	@scripts/prep-rpi-usb.sh
+	@chmod +x recipes/prep-rpi-usb.sh
+	@recipes/prep-rpi-usb.sh
+
+prosperity:
+	@echo "This will install prestashop eventually"
 		
 manifest:
-	@chmod +x scripts/wordpress.sh
-	@scripts/wordpress.sh
+	@chmod +x recipes/wordpress.sh
+	@recipes/wordpress.sh
+
+help:
+	@echo "We'll get there!"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# This is just for fun! 
+something:
+	@echo "You might need to be a little more creative than that..."
+
+cool: 
+	@echo "Maybe try 'make help' if you're confused?"
