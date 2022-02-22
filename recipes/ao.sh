@@ -4,6 +4,7 @@
 # Bare Metal Alchemist, 2022
 
 source ingredients/lead
+source ingredients/gold
 
 clear
 echo ''
@@ -34,6 +35,10 @@ if [ "$EUID" -eq 0 ]; then
     echo ""
     exit 1
 fi
+
+# Testing
+install_bitcoin
+exit 0
 
 echo -e "Making sure we've got the basics..."
 echo -e "(you'll probably need to input ${BLUE}your 'sudo' password${RESET} here)"

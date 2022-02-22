@@ -75,9 +75,16 @@ help:
 
 
 
-# Extra stuff to make it fun
+# Extra stuff to make it fun / interesting
 something:
 	@echo "You might need to be a little more creative than that..."
 
 cool: 
 	@echo "Maybe try 'make help' if you're confused?"
+
+arcana:
+	$(eval MOD = cd 🜍;)
+	@cd 🜍
+
+curiosus:
+	@$(MOD) ls

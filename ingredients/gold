@@ -1,0 +1,69 @@
+#!/bin/sh
+# Bare Metal Alchemist, 2022
+
+############################################# 
+#                Gold - ☼                   # 
+############################################# 
+
+# One of the principal goals of alchemy is the transmutation of base
+# metals into gold. Likewise. one of the purposes of these scripts
+# is the transmutation of bare metal into digital gold, AKA bitcoin
+
+# This ingredient is to be used whenever a recipe requires use of
+# the Bitcoin ecosystem
+
+install_bitcoin() {
+    echo -e "${BOLD}Installing Bitcoin Ecosystem${RESET}"
+
+    if [ $ISA == 'x86_64' ] && [ ! -e 🜍/bitcoin-22.0* ]; then
+        wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0-x86_64-linux-gnu.tar.gz -P 🜍/
+    elif [ $ISA == 'armv7l' ] && [ ! -e 🜍/bitcoin-22.0* ]; then
+        wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0-arm-linux-gnueabihf.tar.gz -P 🜍/
+    fi
+
+    tar -xvf 🜍/bitcoin-22.0.tar.gz
+    sleep 1
+    cd bitcoin-22.0
+    ./contrib/install_db4.sh `pwd`
+}
+
+#sudo cp bitcoin-22.0/bin/* /usr/local/bin/
+#rm -rf bitcoin-22.0
+
+
+#echo -e "${BOLD}Installing lightningd${RESET}"
+#git clone https://github.com/ElementsProject/lightning.git ~/lightning
+#pushd ~/lightning
+#git checkout v0.10.2
+#./configure
+#
+## The latest version of mistune breaks lightning install
+#pip uninstall mistune
+#pip install --user mistune==0.8.4
+#pip install --user mrkd
+#sudo make
+#sudo make install
+#popd
+#
+#TODO fix clboss
+#echo 'Installing clboss'
+#git clone https://github.com/ZmnSCPxj/clboss.git ~/clboss
+#pushd ~/clboss
+#git checkout 0.11B
+#mkdir m4
+#autoreconf -fi
+#./configure
+#make
+#sudo make install
+#popd
+#
+#echo ""
+#echo -e "${BOLD}Bitcoin installed!${RESET} Let's make sure it's configured now."
+#mkdir -p ~/.bitcoin
+#
+#AUTHDEETS=$(python3 scripts/rpcauth.py ao)
+#AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])
+#PASSLINE=$(echo $AUTHDEETS | grep -o [^[:space:]]*\$)
+#
+#if  [ -f $HOME/.bitcoin/bitcoin.conf ]; then
+#

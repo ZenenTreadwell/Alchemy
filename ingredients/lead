@@ -48,6 +48,11 @@ fi
 # at the end of it, like this() or like(this), it's a function!
 # It takes inputs and gives (or does) something as an output
 
+# Checks to see if we can use a command or not
+check_exists() {
+    command -v "$1" >/dev/null
+}
+
 # This one installs utilities to your OS (If you need them!)
 install_if_needed() {
     for package in "$@" # $@ means "all the arguments you passed 
@@ -55,8 +60,8 @@ install_if_needed() {
 
         case $DISTRO in
             "debian")
-                # TODO Better installation detection than "which"
-                if [ -z $(which $package 2>/dev/null) ]; then
+                # TODO Better installation detection than check_exists
+                if [ -z $(check_exists $package) ]; then
                     echo "installing" $package
                     sudo apt install -y $package
                 else
@@ -72,8 +77,8 @@ install_if_needed() {
                 fi
                 ;;
             "fedora")
-                # TODO Better installation detection than "which"
-                if [ -z $(which $package 2>/dev/null) ]; then
+                # TODO Better installation detection than "check_exists"
+                if [ -z $(check_exists $package) ]; then
                     echo "installing" $package
                     sudo dnf install -y $package
                 else
@@ -81,8 +86,8 @@ install_if_needed() {
                 fi
                 ;;
             "mac")
-                # TODO Better installation detection than "which"
-                if [ -z $(which $package 2>/dev/null) ]; then
+                # TODO Better installation detection than "check_exists"
+                if [ -z $(check_exists $package) ]; then
                     echo "installing" $package
                     brew install $package
                 else
@@ -92,4 +97,5 @@ install_if_needed() {
         esac
     done
 }
+
 
