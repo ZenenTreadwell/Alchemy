@@ -57,7 +57,6 @@ check_exists() {
 install_if_needed() {
     for package in "$@" # $@ means "all the arguments you passed 
     do
-
         case $DISTRO in
             "debian")
                 # TODO Better installation detection than check_exists
@@ -98,4 +97,4 @@ install_if_needed() {
     done
 }
 
-
+LEAD=1

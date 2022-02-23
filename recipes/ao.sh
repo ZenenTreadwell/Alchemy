@@ -36,10 +36,6 @@ if [ "$EUID" -eq 0 ]; then
     exit 1
 fi
 
-# Testing
-install_bitcoin
-exit 0
-
 echo -e "Making sure we've got the basics..."
 echo -e "(you'll probably need to input ${BLUE}your 'sudo' password${RESET} here)"
 case $DISTRO in
@@ -115,89 +111,22 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     nvm use default
 fi
 
-
-# Note, it would be a good idea to compile Bitcoin from C to make it resistant to changes in architecture (should work for any ISA)
 if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Installing Bitcoin Ecosystem${RESET}"
-
-    if [ $ISA == 'x86_64' ] && [ ! -e images/bitcoin-22.0* ]; then
-        wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0-x86_64-linux-gnu.tar.gz -P images/
-    elif [ $ISA == 'armv7l' ] && [ ! -e images/bitcoin-22.0* ]; then
-        wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0-arm-linux-gnueabihf.tar.gz -P images/
-    fi
-
-    tar -xvf images/bitcoin-22.0*.tar.gz
-    sleep 1
-
-    sudo cp bitcoin-22.0/bin/* /usr/local/bin/
-    rm -rf bitcoin-22.0
-
-
-    echo -e "${BOLD}Installing lightningd${RESET}"
-    git clone https://github.com/ElementsProject/lightning.git ~/lightning
-    pushd ~/lightning
-    git checkout v0.10.2
-    ./configure
-
-    # The latest version of mistune breaks lightning install
-    pip uninstall mistune
-    pip install --user mistune==0.8.4
-    pip install --user mrkd
-    sudo make
-    sudo make install
-    popd
-
-    TODO fix clboss
-    echo 'Installing clboss'
-    git clone https://github.com/ZmnSCPxj/clboss.git ~/clboss
-    pushd ~/clboss
-    git checkout 0.11B
-    mkdir m4
-    autoreconf -fi
-    ./configure
-    make
-    sudo make install
-    popd
-
-    echo ""
-    echo -e "${BOLD}Bitcoin installed!${RESET} Let's make sure it's configured now."
-    mkdir -p ~/.bitcoin
-
-    AUTHDEETS=$(python3 scripts/rpcauth.py ao)
-    AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])
-    PASSLINE=$(echo $AUTHDEETS | grep -o [^[:space:]]*\$)
-
-    if  [ -f $HOME/.bitcoin/bitcoin.conf ]; then
-        echo 'bitcoin config exists'
-    else
-        cp resources/sample_bitcoin.conf $HOME/.bitcoin/bitcoin.conf
-        echo 'created default bitcoin config'
-    fi
-
-    sed -i "s/BTC_LOGIN/${AUTHLINE}/" $HOME/.bitcoin/bitcoin.conf
-
-    read -p "Quick question - do you have 500GB of open memory on this device? (y/n): " prune
-    echo ""
-    case $prune in
-        y | Y)
-            echo "Okay great! We'll leave the bitcoin config it as it is."
-            ;;
-        *)
-            echo "Let's cut it down to only store the last few blocks (It's only 550 MB!)"
-            sed -i "s/txindex=1/prune=550/" $HOME/.bitcoin/bitcoin.conf
-            ;;
-    esac
-
     echo ""
 
-    mkdir -p $HOME/.lightning
-
-    if  [ -f $HOME/.lightning/config ]; then
-        echo 'lightning config exists'
-    else
-        cp resources/sample_lightning_config $HOME/.lightning/config
-        echo 'created default lightning config'
+    if ! check_exists bitcoind; then
+        echo -e "Building bitcoind from source... might take a while!"
+        install_bitcoin
     fi
+
+    if ! check_exists lightningd; then
+        echo -e "Building lightningd from source... here we go again"
+        install_lightning
+    fi
+
+    configure_bitcoin
+    configure_lightning
 fi
 echo ''
 

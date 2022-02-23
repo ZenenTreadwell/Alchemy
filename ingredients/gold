@@ -13,57 +13,144 @@
 # the Bitcoin ecosystem
 
 install_bitcoin() {
-    echo -e "${BOLD}Installing Bitcoin Ecosystem${RESET}"
+    echo -e "${BOLD}Installing Bitcoin Core${RESET}"
 
-    if [ $ISA == 'x86_64' ] && [ ! -e 🜍/bitcoin-22.0* ]; then
-        wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0-x86_64-linux-gnu.tar.gz -P 🜍/
-    elif [ $ISA == 'armv7l' ] && [ ! -e 🜍/bitcoin-22.0* ]; then
-        wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0-arm-linux-gnueabihf.tar.gz -P 🜍/
+    # We're building bitcoin from source here. It might be slower than
+    # downloading the pre-built binaries but this is more reliable
+    if [ ! -e 🜍/bitcoin-22.0* ]; then
+        wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0.tar.gz -P 🜍/
     fi
+
+    # This still relies on package management though
+    install_if_needed boost
 
     tar -xvf 🜍/bitcoin-22.0.tar.gz
     sleep 1
     cd bitcoin-22.0
-    ./contrib/install_db4.sh `pwd`
+    chmod +x autogen.sh
+    ./autogen.sh
+    ./configure --without-bdb # Someday, someone will complain here
+    make 
+    sudo make install
+    rm -rf bitcoin-22.0
 }
 
-#sudo cp bitcoin-22.0/bin/* /usr/local/bin/
-#rm -rf bitcoin-22.0
+install_lightning() {
+    echo -e "${BOLD}Installing lightningd${RESET}"
+    git clone https://github.com/ElementsProject/lightning.git ./lightning
+    pushd ./lightning
+    git checkout v0.10.2
+    ./configure
 
+    # The latest version of mistune breaks lightning install
+    pip uninstall mistune
+    pip install --user mistune==0.8.4
+    pip install --user mrkd
+    make
+    sudo make install
+    popd
+    rm -rf lightning 
+}
 
-#echo -e "${BOLD}Installing lightningd${RESET}"
-#git clone https://github.com/ElementsProject/lightning.git ~/lightning
-#pushd ~/lightning
-#git checkout v0.10.2
-#./configure
-#
-## The latest version of mistune breaks lightning install
-#pip uninstall mistune
-#pip install --user mistune==0.8.4
-#pip install --user mrkd
-#sudo make
-#sudo make install
-#popd
-#
-#TODO fix clboss
-#echo 'Installing clboss'
-#git clone https://github.com/ZmnSCPxj/clboss.git ~/clboss
-#pushd ~/clboss
-#git checkout 0.11B
-#mkdir m4
-#autoreconf -fi
-#./configure
-#make
-#sudo make install
-#popd
-#
-#echo ""
-#echo -e "${BOLD}Bitcoin installed!${RESET} Let's make sure it's configured now."
-#mkdir -p ~/.bitcoin
-#
-#AUTHDEETS=$(python3 scripts/rpcauth.py ao)
-#AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])
-#PASSLINE=$(echo $AUTHDEETS | grep -o [^[:space:]]*\$)
-#
-#if  [ -f $HOME/.bitcoin/bitcoin.conf ]; then
-#
+install_clboss() {
+    echo -e "${BOLD}Installing clboss${RESET}"
+    git clone https://github.com/ZmnSCPxj/clboss.git ./clboss
+    pushd ./clboss
+    git checkout 0.11B
+    mkdir -p m4
+    autoreconf -fi
+    ./configure
+    make
+    sudo make install
+    popd
+    rm -rf clboss 
+}
+
+configure_bitcoin() {
+    mkdir -p ~/.bitcoin
+
+    AUTHDEETS=$(python3 scripts/rpcauth.py ao)
+    AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])
+    PASSLINE=$(echo $AUTHDEETS | grep -o [^[:space:]]*\$)
+
+    if  [ -f $HOME/.bitcoin/bitcoin.conf ]; then
+        echo -e "Looks like you already have a ${BLUE}bitcoin.conf${RESET} file!"
+        echo ""
+        cat $HOME/.bitcoin/bitcoin.conf
+        echo ""
+        echo -n "Would you like to reset it? (y/n): "
+        read btc_reconf
+        case $btc_reconf in
+            "y" | "Y")
+                cp resources/sample_bitcoin.conf $HOME/.bitcoin/bitcoin.conf
+                echo 'Reset bitcoin configuration file'
+                ;;
+            "n" | "N")
+                echo "Cool, we'll leave it as is then".
+                ;;
+        esac
+    else
+        cp resources/sample_bitcoin.conf $HOME/.bitcoin/bitcoin.conf
+        echo 'Created default bitcoin config'
+    fi
+
+    sed -i "s/BTC_LOGIN/${AUTHLINE}/" $HOME/.bitcoin/bitcoin.conf
+    echo ""
+
+    echo -n "Next question - do you have 500GB of open memory on this device? (y/n): "
+    read prune
+    echo ""
+    case $prune in
+        y | Y)
+            echo "Okay great! We'll leave the bitcoin config it as it is."
+            ;;
+        *)
+            echo "Let's enable pruning to keep the file size down, then."
+            sed -i "s/txindex=1/prune=550/" $HOME/.bitcoin/bitcoin.conf
+            ;;
+    esac
+}
+
+configure_lightning() {
+    mkdir -p $HOME/.lightning
+
+    if  [ -f $HOME/.lightning/config ]; then
+        echo -e "Looks like you already have a ${BLUE}lightning config${RESET} file!"
+        echo ""
+        cat $HOME/.lightning/config
+        echo ""
+        echo -n "Would you like to reset it? (y/n): "
+        read ln_reconf
+        case $ln_reconf in
+            "y" | "Y")
+                cp resources/sample_lightning_config $HOME/.lightning/config
+                echo -e "${GREEN}Reset lightning configuration file${RESET}"
+                ;;
+            "n" | "N")
+                echo "Cool, we'll leave it as is then".
+                ;;
+        esac
+    else
+        cp resources/sample_lightning_config $HOME/.lightning/config
+        echo -e "${GREEN}Created default lightning config${RESET}"
+    fi
+
+    echo ""
+    echo -n "Would you like to use clboss to automatically open lightning channels? (y/n): "
+    read clboss_enable
+    case $clboss_enable in
+        "y" | "Y")
+            install_clboss
+            sed -i "s/#plugin/plugin/" $HOME/.lightning/config
+            sed -i "s/#log/log/" $HOME/.lightning/config
+            echo ""
+            echo -e "${GREEN}clboss successfully configured!${RESET}"
+            ;;
+        "n" | "N")
+            echo ""
+            echo "Sounds good. You might want to open some channels manually to participate in the network!".
+            ;;
+    esac
+}
+
+GOLD=1

@@ -84,7 +84,12 @@ cool:
 
 arcana:
 	$(eval MOD = cd 🜍;)
-	@cd 🜍
+	@cd ~
 
 curiosus:
 	@$(MOD) ls
+
+signum:
+	@$(MOD) pwd
+
+
