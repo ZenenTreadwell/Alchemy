@@ -1,3 +1,61 @@
+#!/bin/sh
+# Bare Metal Alchemist, 2022
+
+############################################# 
+#             Copper - ♀                    # 
+############################################# 
+
+# Copper wires form the backbone of electrical systems worldwide
+# and much of the internet as a whole.
+
+# This ingredient is focused around scripts that make it easier to
+# interact with and create new networks on your system.
+
+locate_torrc() {
+    if [ -n $TORRCPATH ]; then
+        if [ -e /usr/local/etc/tor/torrc ]; then
+            TORRCPATH='/usr/local/etc/tor/torrc'
+        elif [ -e /etc/tor/torrc ]; then
+            TORRCPATH='/etc/tor/torrc'
+        elif [ -e $HOME/.tor/torrc ]; then
+            TORRCPATH="${HOME}/.tor/torrc"
+        else
+            echo -e "${RED}Uh oh...${RESET} I couldn't figure out where your torrc file is. That might cause some issues"                                                                                                             
+            exit 1
+        fi
+    fi
+
+    echo -e "Your torrc is located at ${BLUE}${TORRCPATH}${RESET}"
+    echo "TORRCPATH=${TORRCPATH}" > .env
+}
+
+configure_tor() {
+    locate_torrc
+
+    echo -e "Your existing torrc file has the following settings: "
+    echo ""
+    cat $TORRCPATH | grep '^[^#]'
+    echo ""
+    echo -en "Would you like to reset them?: ${BLUE}(y/n)${RESET} "
+    read torrc_reset
+    case $torrc_reset in
+        "Y" | "y")
+            cp resources/torrc-template .                                                                                                                                                                                                 
+            sudo sed -i "s#USER#${USER}#g" torrc-template                                                                                                                                                                                 
+            sudo sed -i "s#HOME#${HOME}#g" torrc-template                                                                                                                                                                                 
+            sudo mv torrc-template $TORRCPATH                                                                                                                                                                                         
+            echo -e "${GREEN}Torrc file reset!${RESET}"
+            ;;
+        '*')
+            echo "Okay, we'll leave it as is."
+            ;;
+    esac
+    echo ""
+
+    echo -e "Tor configuration ${GREEN}complete!${RESET}"
+}
+
+
 # internet connections? copper wires etc.
 # using yggdrasil could maybe fit in here
 # nginx setup

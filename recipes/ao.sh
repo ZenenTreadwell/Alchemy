@@ -4,6 +4,7 @@
 # Bare Metal Alchemist, 2022
 
 source ingredients/lead
+source ingredients/copper
 source ingredients/gold
 
 clear
@@ -133,26 +134,7 @@ echo ''
 if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Installing and configuring Tor${RESET}\n"
     install_if_needed tor
-
-    if [ -e /usr/local/etc/tor/torrc ]; then
-        TORRCPATH='/usr/local/etc/tor/torrc'
-    elif [ -e /etc/tor/torrc ]; then
-        TORRCPATH='/etc/tor/torrc'
-    fi
-
-    # Configure and write torrc file
-    cp resources/torrc-template .
-    sudo sed -i "s#USER#${USER}#g" torrc-template
-    sudo sed -i "s#HOME#${HOME}#g" torrc-template
-
-    if [ -z "$TORRCPATH" ]; then
-        echo -e "${RED}Uh oh...${RESET} I couldn't figure out where your torrc file is. That might cause some issues"
-        sleep 3
-        echo -e "\nAnyways...\n"
-        sleep 2
-    else
-        sudo mv torrc-template $TORRCPATH
-    fi
+    configure_tor
 fi
 
 # ------------------- Step 3 - AO Installation -------------------
