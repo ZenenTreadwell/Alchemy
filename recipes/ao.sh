@@ -5,6 +5,7 @@
 
 source ingredients/lead
 source ingredients/copper
+source ingredients/iron
 source ingredients/gold
 
 clear
@@ -90,6 +91,7 @@ while [[ -z $AO ]]; do
             ;;
     esac
 done;
+echo "AO=${AO}" >> .env
 echo ""
 
 if [ $AO = "3" ] || [ $AO = 'react' ]; then

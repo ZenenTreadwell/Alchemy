@@ -32,7 +32,7 @@ if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
 else
     echo "No .env file found, let's initialize it"
-    echo "ALCHEMY=true" > .env
+    echo "ALCHEMY=`pwd`" >> .env
 fi
 
 echo ""
@@ -48,7 +48,7 @@ if [[ ! $ISA ]]; then
     elif [ $ISA == 'armv7l' ]; then
         echo -e "I see you rockin an ${GREEN}ARM${RESET} processor, neato"
     fi
-    echo "ISA=$ISA" >> .env
+    remember "ISA=$ISA"
 fi
 
 if [[ ! $DISTRO ]]; then
@@ -68,7 +68,7 @@ if [[ ! $DISTRO ]]; then
         echo -e "I don't know ${RED}what OS you're running${RESET}! Cancelling this operation."
         exit 1
     fi
-    echo "DISTRO=$DISTRO" >> .env
+    remember "DISTRO=$DISTRO"
 fi
 
 # TODO - Update intermittently (like if you haven't run it in a week? use date +%s and (($INT+$INT2))
@@ -96,7 +96,7 @@ if [[ ! $UPDATED ]]; then
             sudo brew update
             ;;
     esac
-    echo "UPDATED=true" >> .env
+    remember "UPDATED=true"
 fi
 
 echo ""

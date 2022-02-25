@@ -24,14 +24,20 @@ RESET="\e[0m"
 # Traps, in the case of shell scripting, listen for certain signals 
 # that are broadcast by the system and execute a command in response
 
-# Make sure that ctrl+C consistently exits the script
-trap "exit" INT 
-
-# Give informative error messages when we receive ERR
-trap 'echo -e "${RED}Oops!${RESET} Something went wrong on line $LINENO of this script. Exit code was $?" >&2' ERR
+# We only want these to activate if we're running a recipe
+if [[ $SHLVL -gt 1 ]]; then
+    # Make sure that ctrl+C consistently exits the script
+    trap "exit" INT 
+    # Give informative error messages when we receive ERR
+    trap 'echo -e "${RED}Oops!${RESET} Something went wrong on line $LINENO of this script. Exit code was $?" >&2' ERR
+fi
 
 
 # --------------- Environment Setup ---------------
+
+if [ -d $ALCHEMY ]; then
+    cd $ALCHEMY
+fi
 
 if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
@@ -95,6 +101,14 @@ install_if_needed() {
                 ;;
         esac
     done
+}
+
+remember() {
+    KEY=$(echo ${1} | cut -d'=' -f 1)
+    if [[ ${1} =~ ^[A-Z]+\=[a-z_0-9]*$ ]] && [[ -z $(env | grep ${KEY}) ]]; then
+        echo "${1}" >> .env
+        export ${1}
+    fi
 }
 
 LEAD=1

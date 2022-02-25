@@ -20,7 +20,8 @@ locate_torrc() {
         elif [ -e $HOME/.tor/torrc ]; then
             TORRCPATH="${HOME}/.tor/torrc"
         else
-            echo -e "${RED}Uh oh...${RESET} I couldn't figure out where your torrc file is. That might cause some issues"                                                                                                             
+            echo -e "${RED}Uh oh...${RESET} I couldn't figure out\
+                where your torrc file is. That might cause some issues"                                                                                                             
             exit 1
         fi
     fi
