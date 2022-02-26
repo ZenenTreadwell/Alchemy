@@ -13,27 +13,33 @@
 # installing common frameworks. Expect to use this one a lot if you're
 # writing alchemy recipes!
 
-install_nodejs() {
-    echo -e "${BOLD}Installing Node.js${RESET}"                                                                                                                                                                                   
-    chmod +x scripts/nvm_install.sh                                                                                                                                                                                               
-    scripts/nvm_install.sh                                                                                                                                                                                                        
+set_node_to() {
+    if check_exists nvm; then
+        nvm install v16.13.0                                                                                                                                                                                                          
+        nvm alias default v16.13.0                                                                                                                                                                                                    
+        nvm use default
+    else
+        echo "nvm not available, something went wrong..."
+    fi
+}
 
-    export NVM_DIR="$HOME/.nvm"                                                                                                                                                                                                   
+install_nvm() {
+    echo -e "${BOLD}Installing Node Version Manager${RESET}"                                                                                                                                                                                   
+    chmod +x scripts/nvm_install.sh                                                                                                                                                                                               
+    scripts/nvm_install.sh &> /dev/null
+
+    remember "NVM_DIR=$HOME/.nvm"                                                                                                                                                                                                   
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm                                                                                                                                                            
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion                                                                                                                          
 
-    # if [ "$SHELL" = '/bin/zsh' ]; then                                                                                                                                                                                            
-    #     echo 'sourcing zshrc'                                                                                                                                                                                                     
-    #     source ~/.zshrc                                                                                                                                                                                                           
-    # else                                                                                                                                                                                                                          
-    #     source ~/.bashrc                                                                                                                                                                                                          
-    # fi                                                                                                                                                                                                                            
+    case $SHELL in
+        "/bin/zsh")
+            source ~/.zshrc
+            ;;
+        "/bin/bashrc")
+            source ~/.bashrc
+            ;;
+    esac
 }
 
-set_node_to() {
-    nvm install v16.13.0                                                                                                                                                                                                          
-    nvm alias default v16.13.0                                                                                                                                                                                                    
-    nvm use default
-}
-
-
+IRON=1

@@ -90,6 +90,7 @@ cp resources/tmux.conf $HOME/.tmux.conf
 cp resources/tmux-powerline-theme.sh $HOME/.tmux/tmux-powerline/themes/default.sh
 echo ""
 
+# TODO is this neededd? can we install p10k on base zsh?
 echo "Installing Oh My Zsh for theming - this could take a moment"
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 cat resources/zshrc-extras >> $HOME/.zshrc

@@ -32,7 +32,7 @@ if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
 else
     echo "No .env file found, let's initialize it"
-    echo "ALCHEMY=`pwd`" >> .env
+    remember "ALCHEMY=$(pwd)"
 fi
 
 echo ""

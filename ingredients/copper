@@ -27,7 +27,7 @@ locate_torrc() {
     fi
 
     echo -e "Your torrc is located at ${BLUE}${TORRCPATH}${RESET}"
-    echo "TORRCPATH=${TORRCPATH}" > .env
+    remember "TORRCPATH=${TORRCPATH}"
 }
 
 configure_tor() {
@@ -55,6 +55,75 @@ configure_tor() {
 
     echo -e "Tor configuration ${GREEN}complete!${RESET}"
 }
+
+get_external_ip() {
+    case $DISTRO in
+        "arch")
+            install_if_needed dnsutils
+            ;;
+        "*")
+            #install_if_needed dig
+            echo "Not yet supported! Feel free to help out here :)"
+            ;;
+    esac
+
+    EXTERNAL_IP=$(dig @resolver4.opendns.com myip.opendns.com +short)
+    echo "Your external IP is $EXTERNAL_IP"
+    remember "EXTERNAL_IP=$EXTERNAL_IP"
+}
+
+get_domain_name() {
+    read -p "Do you have a domain name pointing to this computer? (y/n): " dns                                                                                                                                                       
+    echo ""                                                                                                                                                                                                                          
+    case $dns in                                                                                                                                                                                                                     
+        y | Y)                                                                                                                                                                                                                       
+            echo "Good to hear! What is it?"                                                                                                                                                                                         
+            read -p "http://" domain                                                                                                                                                                                                 
+            ;;                                                                                                                                                                                                                       
+        *)                                                                                                                                                                                                                           
+            echo "Okay, let's just leave it open for now."                                                                                                                                                                           
+            domain=$(dig @resolver4.opendns.com myip.opendns.com +short)                                                                                                                                                             
+            anywhere=1                                                                                                                                                                                                               
+            echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"                                                                                                                                              
+            ;;                                                                                                                                                                                                                       
+    esac                                                                                                                                                                                                                             
+
+    if [ "$anywhere" -eq 1 ]; then                                                                                                                                                                                                   
+        ACCESS_POINT=http://localhost                                                                                                                                                                                                
+    else                                                                                                                                                                                                                             
+        ACCESS_POINT=https://$domain                                                                                                                                                                                                 
+    fi  
+}
+
+check_ports() {
+	install_if_needed nmap                                                                                                                                                                                                            
+	nmap -Pn $domain > nmap.txt                                                                                                                                                                                                       
+	OPEN=1                                                                                                                                                                                                                            
+	if grep -qE "^80/.*(open|filtered)" nmap.txt; then                                                                                                                                                                                
+		echo -e "I can see port ${GREEN}80${RESET}!"                                                                                                                                                                                  
+	else                                                                                                                                                                                                                              
+		echo -e "Uh oh, port ${RED}80${RESET} isn't showing up..."                                                                                                                                                                    
+		OPEN=0                                                                                                                                                                                                                        
+	fi                                                                                                                                                                                                                                
+
+	if grep -qE "^443/.*(open|filtered)" nmap.txt; then                                                                                                                                                                               
+		echo -e "I can see port ${GREEN}443${RESET} as well!"                                                                                                                                                                         
+	else                                                                                                                                                                                                                              
+		echo -e "Uh oh, port ${RED}443${RESET} isn't showing up..."                                                                                                                                                                   
+		OPEN=0                                                                                                                                                                                                                        
+	fi                                                                                                                                                                                                                                
+	rm nmap.txt                                                                                                                                                                                                                       
+	echo ""                                                                                                                                                                                                                           
+	if [[ $OPEN -eq 0 ]]; then                                                                                                                                                                                                        
+		echo -e "${RED}Port configuration needed.${RESET} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."                                                               
+		echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."                                                                                             
+		echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}$(ip route | grep default | grep -oP "(?<=src )[^ ]+")${RESET})."
+		echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${RESET}"                                                                                                   
+		echo "That's all the help I can give you regarding port forwarding. Good luck!"                                                                                                                                            
+		echo ""                                                                                                                                                                                                                    
+	fi 
+}
+
 
 
 # internet connections? copper wires etc.

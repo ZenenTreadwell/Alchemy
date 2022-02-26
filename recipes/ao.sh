@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Script for installing the base dependencies of AO and getting it running
 # Bare Metal Alchemist, 2022
@@ -64,13 +64,16 @@ case $DISTRO in
         ;;
 esac
 echo ""
-#
-## ------------------- Step 2 - AO Environment Setup -------------------
-#
-AO=''
-echo -e "${BOLD}Hey!${RESET} I was wondering which ${BLUE}version of AO${RESET} you wanted to install. \n"
-echo -e "${BOLD}1.${RESET} ao-3 (Vue)"
-echo -e "${BOLD}2.${RESET} ao-react (React)"
+
+# ------------------- Step 2 - AO Environment Setup -------------------
+
+if [ -z $AO ]; then
+    AO=''
+    echo -e "${BOLD}Hey!${RESET} I was wondering which ${BLUE}version of AO${RESET} you wanted to install. \n"
+    echo -e "${BOLD}1.${RESET} ao-3 (Vue)"
+    echo -e "${BOLD}2.${RESET} ao-react (React)"
+fi
+
 while [[ -z $AO ]]; do
     echo -en "${BLUE}(number):${RESET} "
     read -n1 ao_select
@@ -79,11 +82,11 @@ while [[ -z $AO ]]; do
 
     case $ao_select in
         "1")
-            echo "Minimalism, I like it! Proceeding with ao-3 installation"
+            echo "Minimalism, I like it! Proceeding with ${BLUE}ao-3${RESET} installation"
             AO=3
             ;;
         "2")
-            echo "It's got community! Proceeding with ao-react installation"
+            echo -e "It's got community! Proceeding with ${BLUE}ao-react${RESET} installation"
             AO=react
             ;;
         *)
@@ -91,27 +94,20 @@ while [[ -z $AO ]]; do
             ;;
     esac
 done;
-echo "AO=${AO}" >> .env
+remember "AO=${AO}"
+
 echo ""
-
 if [ $AO = "3" ] || [ $AO = 'react' ]; then
-    echo -e "${BOLD}Installing Node.js${RESET}"
-    chmod +x scripts/nvm_install.sh
-    scripts/nvm_install.sh
-
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-    if [ "$SHELL" = '/bin/zsh' ]; then
-        echo 'sourcing zshrc'
-        source ~/.zshrc
+    if ! check_exists nvm; then
+        install_nvm
     else
-        source ~/.bashrc
+        echo -e "${BLUE}Node${RESET} already installed"
+        echo ""
     fi
-    nvm install v16.13.0
-    nvm alias default v16.13.0
-    nvm use default
+
+    echo "Setting Node to v16.13.0 for compatibility"
+    set_node_to v16.13.0
+    echo -e "${GREEN}Done!${RESET}"
 fi
 
 if [ $AO = "3" ] || [ $AO = 'react' ]; then
@@ -151,6 +147,7 @@ else
     node scripts/createPrivateKey.js >> $HOME/.ao/key
     echo -e "Just made a fresh private key and put it in ${GREEN}~/.ao${RESET}"
 fi
+echo ""
 
 # TODO this is really janky/fragile, it would be better to store this in ~/.ao
 CONFIG_FILE=$HOME/ao-$AO/configuration.js
@@ -264,14 +261,14 @@ esac
  echo ""
  case $ssl in
      y | Y)
- 	echo "Alright, let's get Certbot in here!"
- 	install_if_needed python3 certbot python3-certbot-nginx
- 	echo -e "${BOLD}Take it away, Certbot${NC}"
- 	sudo certbot --nginx
+         echo "Alright, let's get Certbot in here!"
+         install_if_needed python3 certbot python3-certbot-nginx
+         echo -e "${BOLD}Take it away, Certbot${NC}"
+         sudo certbot --nginx
          ;;
      *)
- 	echo "Yea, SSL is lame anyways..."
- 	;;
+         echo "Yea, SSL is lame anyways..."
+         ;;
  esac
  echo ""
 
@@ -384,32 +381,7 @@ sudo systemctl start nginx
 
 echo ""
 echo -e "${BOLD}One more thing!${RESET} We need to make sure that your ports are open."
-install_if_needed nmap
-nmap -Pn $domain > nmap.txt
-OPEN=1
-if grep -qE "^80/.*(open|filtered)" nmap.txt; then
-	echo -e "I can see port ${GREEN}80${RESET}!"
-else
-	echo -e "Uh oh, port ${RED}80${RESET} isn't showing up..."
-	OPEN=0
-fi
-
-if grep -qE "^443/.*(open|filtered)" nmap.txt; then
-	echo -e "I can see port ${GREEN}443${RESET} as well!"
-else
-	echo -e "Uh oh, port ${RED}443${RESET} isn't showing up..."
-	OPEN=0
-fi
-rm nmap.txt
-echo ""
-if [[ $OPEN -eq 0 ]]; then
-	echo -e "${RED}Port configuration needed.${RESET} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."
-       echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."
-       echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}$(ip route | grep default | grep -oP "(?<=src )[^ ]+")${RESET})."
-       echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${RESET}"
-       echo "That's all the help I can give you regarding port forwarding. Good luck!"
-       echo ""
-fi
+check_ports
 
 # ------------------- Step 9 - Health Check -------------------
  echo '*********************************************************'

@@ -29,16 +29,13 @@ if [[ $SHLVL -gt 1 ]]; then
     # Make sure that ctrl+C consistently exits the script
     trap "exit" INT 
     # Give informative error messages when we receive ERR
-    trap 'echo -e "${RED}Oops!${RESET} Something went wrong on line $LINENO of this script. Exit code was $?" >&2' ERR
+    trap 'echo -e "${RED}Oops...${RESET} Something went wrong on line $LINENO of this script. Exit code was $?" >&2' ERR
 fi
 
 
 # --------------- Environment Setup ---------------
 
-if [ -d $ALCHEMY ]; then
-    cd $ALCHEMY
-fi
-
+# If there's an env file, export it's contents to the environment
 if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
 else
@@ -103,9 +100,11 @@ install_if_needed() {
     done
 }
 
+# This one looks like gibberish because we're using regex, don't worry.
+# It takes values and stores them away in the env for later reference
 remember() {
     KEY=$(echo ${1} | cut -d'=' -f 1)
-    if [[ ${1} =~ ^[A-Z]+\=[a-z_0-9]*$ ]] && [[ -z $(env | grep ${KEY}) ]]; then
+    if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._]*$ ]] && [[ -z $(env | grep ${KEY}) ]]; then
         echo "${1}" >> .env
         export ${1}
     fi
