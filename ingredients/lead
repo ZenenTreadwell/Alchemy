@@ -104,9 +104,33 @@ install_if_needed() {
 # It takes values and stores them away in the env for later reference
 remember() {
     KEY=$(echo ${1} | cut -d'=' -f 1)
-    if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._]*$ ]] && [[ -z $(env | grep ${KEY}) ]]; then
-        echo "${1}" >> .env
-        export ${1}
+    VALUE=$(echo ${1} | cut -d'=' -f 2)
+
+    if [[ ! $KEY =~ ^[A-Z_]+$ ]]; then
+        echo "Keys must consist only of capital letters and underscores"
+    fi
+
+    if [[ ! $VALUE =~ ^[A-Za-z0-9/_.]+$ ]]; then
+        echo "Valid characters for env values: letters, numbers, \".\",\"/\",\"_\""
+    fi
+
+    if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._]*$ ]]; then
+        if [[ -n $(env | grep ${KEY}) ]]; then
+            echo -e "${BLUE}${KEY}${RESET} has already been defined in the env!"
+            echo -n "would you like to overwrite it? ${BLUE}(y/n)${RESET} "
+            read overwrite
+            case $overwrite in
+                "y" | "Y")
+                    unset ${KEY}
+                    sed -i "/^${KEY}.*$/d" .env
+                    echo "${1}" >> .env
+                    export ${1}
+                    ;;
+            esac
+        else
+            echo "${1}" >> .env
+            export ${1}
+        fi
     fi
 }
 
