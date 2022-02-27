@@ -39,7 +39,7 @@ It provides infrastructure that makes development in Alchemy more accessible.
 
 `tin` corresponds to hardware and interaction with physical systems.
 
-`iron` forms the core of web development in the ecosystem.
+`iron` forms the core of web development and system operation
 
 `copper` corresponds to connectivity to other systems on the network.
 

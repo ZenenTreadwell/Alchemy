@@ -10,9 +10,8 @@
 # our society as a whole.
 
 # This ingredient contains functions for building web applications and
-# installing common frameworks. Expect to use this one a lot if you're
+# running them frm your server. Expect to use this one a lot if you're
 # writing alchemy recipes!
-
 
 # ------------------- NodeJS Ecosystem -------------------
 
@@ -23,9 +22,11 @@ fi
 
 set_node_to() {
     if check_exists nvm; then
-        nvm install $1
-        nvm alias default $1
-        nvm use default
+        if [ ! $(node -v) = $1 ]; then
+            nvm install $1
+            nvm alias default $1
+            nvm use default
+        fi
     else
         echo "nvm not available, something went wrong..."
     fi
@@ -40,6 +41,58 @@ install_nvm() {
         scripts/nvm_install.sh &> /dev/null
 
         remember "NVM_DIR=$HOME/.nvm"                                                                                                                                                                                                   
+    fi
+}
+
+# ------------------- Systemd / Services -------------------
+
+build_service_from_template() {
+    SERVICE=$1
+    shift
+    echo ""
+    if [ -f resources/service-templates/${SERVICE} ]; then
+        echo "Creating $SERVICE.service..."
+        SERVICE_FILE=/etc/systemd/system/${SERVICE}.service
+        if [ -f "$SERVICE_FILE" ]; then
+            echo "Seems like you've already installed ${SERVICE} here!"
+            echo -en "Would you like to recreate it? ${BLUE}(y/n)${RESET} "
+            read reset
+            case reset in
+                "Y" | "y")
+                    sudo rm $SERVICE_FILE
+                    ;;
+                "N" | "n")
+                    echo "Okay, we'll leave it as is."
+                    ;;
+            esac
+        fi
+
+        if [ ! -f "$SERVICE_FILE" ]; then
+            sudo cp resources/service-templates/${SERVICE} $SERVICE_FILE
+
+            # Common template values
+            sudo sed -i "s#USER#${USER}#g" $SERVICE_FILE
+            sudo sed -i "s#HOME#${HOME}#g" $SERVICE_FILE
+            for keyval; do
+                KEY=$(echo $keyval | cut -d'=' -f 1)
+                VAL=$(echo $keyval | cut -d'=' -f 2)
+
+                echo "Substituting $KEY for $VAL"
+                sudo sed -i "s#$KEY#$VAL#g" $SERVICE_FILE
+            done
+        fi
+    else
+        echo "No service template available for $SERVICE"
+    fi
+}
+
+activate_service() {
+    SERVICE=$1
+    SERVICE_FILE=/etc/systemd/system/${SERVICE}.service
+    if [ -f "$SERVICE_FILE" ]; then
+        echo -e "Enabling and starting ${GREEN}${SERVICE}${RESET}"
+        sudo systemctl enable ${SERVICE}
+        sudo systemctl start ${SERVICE}
     fi
 }
 

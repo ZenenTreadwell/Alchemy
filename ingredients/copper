@@ -41,7 +41,7 @@ configure_tor() {
     echo ""
     cat $TORRCPATH | grep '^[^#]'
     echo ""
-    echo -en "Would you like to reset them?: ${BLUE}(y/n)${RESET} "
+    echo -en "Would you like to reset it?: ${BLUE}(y/n)${RESET} "
     read torrc_reset
     case $torrc_reset in
         "Y" | "y")
@@ -77,6 +77,8 @@ get_external_ip() {
 }
 
 initialize_nginx() {
+    echo -e "${BOLD}Installing and configuring NGINX${RESET}"
+    echo ""
     install_if_needed nginx
 
      # Making sure this version of NGINX supports sites-enabled                                                                                                                                                                       
@@ -95,10 +97,8 @@ make_site() {
     if [ -f resources/nginx/${SITE}.nginx.conf ]; then
         NGINX_SITE_LOCATION=/etc/nginx/sites-available/${SITE}                                                                                                                                                                                     
         if [ -f $NGINX_SITE_LOCATION ]; then
-            echo -en "You already have a site available for ${SITE}, \
-                what would you like to do? ${BOLD}R${RESET}eset it,\
-                ${BOLD}A${RESET}ctivate it, or do ${BOLD}N${RESET}\
-                othing? ( r / a / n ): "
+            echo -e "You already have a site available for ${BLUE}${SITE}${RESET}, what would you like to do?"
+            echo -en "${BOLD}R${RESET}eset it, ${BOLD}A${RESET}ctivate it, or do ${BOLD}N${RESET}othing? (r/a/n): "
             read whatdo
             case $whatdo in
                 "R" | "r")
@@ -118,6 +118,7 @@ make_site() {
                     echo "Instructions unclear, accidentally an choice"
                     ;;
             esac
+            echo ""
         fi
 
         if [ ! -f $NGINX_SITE_LOCATION ]; then
@@ -231,66 +232,27 @@ enable_ssl() {
         ACCESS_POINT=http://localhost
     else
         if [ -z $SSL ]; then
-        ACCESS_POINT=http://$DOMAIN
+            ACCESS_POINT=http://$DOMAIN
         else
-        ACCESS_POINT=https://$DOMAIN
+            ACCESS_POINT=https://$DOMAIN
         fi
     fi
     remember "ACCESS_POINT=${ACCESS_POINT}"
 }
 
-build_service_from_template() {
-    SERVICE=$1
-    shift
-    echo ""
-    if [ -f resources/service-templates/${SERVICE} ]; then
-        echo "Creating $SERVICE.service..."
-        SERVICE_FILE=/etc/systemd/system/${SERVICE}.service
-        if [ -f "$SERVICE_FILE" ]; then
-            echo "Seems like you've already installed ${SERVICE} here!"
-            echo -n "Would you like to recreate it? ${BLUE}(y/n)${RESET} "
-            read reset
-            case reset in
-                "Y" | "y")
-                    sudo rm $SERVICE_FILE
-                    ;;
-                "N" | "n")
-                    echo "Okay, we'll leave it as is."
-                    ;;
-            esac
-        fi
-
-        if [ ! -f "$SERVICE_FILE" ]; then
-            sudo cp resources/service-templates/${SERVICE} $SERVICE_FILE
-
-            # Common template values
-            sudo sed -i "s#USER#${USER}#g" $SERVICE_FILE
-            sudo sed -i "s#HOME#${HOME}#g" $SERVICE_FILE
-            for keyval; do
-                KEY=$(echo $keyval | cut -d'=' -f 1)
-                VAL=$(echo $keyval | cut -d'=' -f 2)
-
-                echo "Substituting $KEY for $VAL"
-                sudo sed -i "s#$KEY#$VAL#g" $SERVICE_FILE
-            done
-        fi
-    else
-        echo "No service template available for $SERVICE"
-    fi
-}
-
-activate_service() {
-    SERVICE_FILE=/etc/systemd/system/${SERVICE}.service
-    if [ -f "$SERVICE_FILE" ]; then
-        echo -e "Enabling and starting ${GREEN}${SERVICE}${RESET}"
-        sudo systemctl enable ${SERVICE}
-        sudo systemctl start ${SERVICE}
-    fi
-}
-
 check_ports() {
+    echo -e "${BOLD}Checking Port Accessibility${RESET}"
+
+    if [ -z $DOMAIN ]; then
+        ADDR=$EXTERNAL_IP
+    else 
+        ADDR=$DOMAIN
+    fi
+
+    echo -e "Querying this computer from ${BLUE}${ADDR}${RESET}"
+    echo ""
 	install_if_needed nmap
-	nmap -Pn $domain > nmap.txt
+	nmap -Pn $EXTERNAL_IP > nmap.txt
 	OPEN=1
 	if grep -qE "^80/.*(open|filtered)" nmap.txt; then
 		echo -e "I can see port ${GREEN}80${RESET}!"
@@ -307,19 +269,19 @@ check_ports() {
 	fi
 	rm nmap.txt
 	echo ""
+
+    # TODO I changed default to src on the line below - impact?
+    LOCAL_IP=$(ip route | grep src | grep -oP "(?<=src )[^ ]+")
+    ROUTER_IP=$(route -n | grep ^0.0.0.0 | awk '{print $2}')
+
 	if [[ $OPEN -eq 0 ]]; then
 		echo -e "${RED}Port configuration needed.${RESET} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."
 		echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."
-		echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}$(ip route | grep default | grep -oP "(?<=src )[^ ]+")${RESET})."
-		echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${RESET}"
+		echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}${LOCAL_IP}${RESET})."
+		echo -e "You can log into your router at this IP address: ${BOLD}${ROUTER_IP}${RESET}"
 		echo "That's all the help I can give you regarding port forwarding. Good luck!"
 		echo ""
 	fi
 }
 
-
-
-# internet connections? copper wires etc.
 # using yggdrasil could maybe fit in here
-# nginx setup
-# port checking

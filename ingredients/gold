@@ -78,7 +78,7 @@ configure_bitcoin() {
         echo ""
         cat $HOME/.bitcoin/bitcoin.conf
         echo ""
-        echo -n "Would you like to reset it? (y/n): "
+        echo -en "Would you like to reset it? ${BLUE}(y/n)${RESET}: "
         read btc_reconf
         case $btc_reconf in
             "y" | "Y")
@@ -97,7 +97,7 @@ configure_bitcoin() {
     sed -i "s/BTC_LOGIN/${AUTHLINE}/" $HOME/.bitcoin/bitcoin.conf
     echo ""
 
-    echo -n "Next question - do you have 500GB of open memory on this device? (y/n): "
+    echo -en "Next question - do you have 500GB of open memory on this device? ${BLUE}(y/n)${RESET}: "
     read prune
     echo ""
     case $prune in
@@ -105,7 +105,7 @@ configure_bitcoin() {
             echo "Okay great! We'll leave the bitcoin config it as it is."
             ;;
         *)
-            echo "Let's enable pruning to keep the file size down, then."
+            echo -e "Let's ${GREEN}enable pruning${RESET} to keep the file size down, then."
             sed -i "s/txindex=1/prune=550/" $HOME/.bitcoin/bitcoin.conf
             ;;
     esac
@@ -119,7 +119,7 @@ configure_lightning() {
         echo ""
         cat $HOME/.lightning/config
         echo ""
-        echo -n "Would you like to reset it? (y/n): "
+        echo -en "Would you like to reset it? ${BLUE}(y/n)${RESET}: "
         read ln_reconf
         case $ln_reconf in
             "y" | "Y")
@@ -136,7 +136,7 @@ configure_lightning() {
     fi
 
     echo ""
-    echo -n "Would you like to use clboss to automatically open lightning channels? (y/n): "
+    echo -en "Would you like to use clboss to automatically open lightning channels? ${BLUE}(y/n)${RESET}: "
     read clboss_enable
     case $clboss_enable in
         "y" | "Y")

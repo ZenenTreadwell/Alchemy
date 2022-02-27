@@ -67,6 +67,21 @@ echo ""
 
 # ------------------- Step 2 - AO Environment Setup -------------------
 
+if [ ! -z $AO ]; then
+    echo "You're currently using ao-$AO"
+    echo -en "Would you like to re-install? ${BLUE}(y/n): ${RESET}"
+    read reinstall_ao
+    echo ""
+    case $reinstall_ao in
+        "Y" | "y")
+            forget AO
+            ;;
+        *)
+            echo "Okay, we'll keep using this version of AO"
+            ;;
+    esac
+fi
+
 if [ -z $AO ]; then
     AO=''
     echo -e "${BOLD}Hey!${RESET} I was wondering which ${BLUE}version of AO${RESET} you wanted to install. \n"
@@ -102,11 +117,10 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
         install_nvm
         source ingredients/iron
     else
-        echo -e "${BLUE}Node${RESET} already installed"
-        echo ""
+        echo -e "${BLUE}Node${RESET} already installed!"
     fi
 
-    echo "Setting Node to ${BLUE}v16.13.0${RESET} for compatibility"
+    echo -e "Setting Node to ${BLUE}v16.13.0${RESET} for compatibility"
     set_node_to v16.13.0
     echo ""
     echo -e "${GREEN}Done!${RESET}"
@@ -136,6 +150,7 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Installing and configuring Tor${RESET}\n"
     install_if_needed tor
     configure_tor
+    echo ""
 fi
 
 # ------------------- Step 3 - AO Installation -------------------
@@ -157,8 +172,10 @@ CONFIG_FILE=$HOME/ao-$AO/configuration.js
 
 case $AO in
     "3")
-        echo -e "Installing ${BLUE}ao-3${RESET}"
-        git clone 'https://github.com/AutonomousOrganization/ao-3.git' ~/ao-3
+        if [ ! -d ~/ao-3 ]; then
+            echo -e "Installing ${BLUE}ao-3${RESET}"
+            git clone 'https://github.com/AutonomousOrganization/ao-3.git' ~/ao-3
+        fi
         if [ -f "$CONFIG_FILE" ]; then
             echo configuration.js already exists
         else
@@ -181,7 +198,9 @@ case $AO in
         ;;
     "react")
         echo -e "Installing ${BLUE}ao-react${RESET}"
-        git clone 'https://github.com/coalition-of-invisible-colleges/ao-react.git' ~/ao-react
+        if [ ! -d ~/ao-react ]; then
+            git clone 'https://github.com/coalition-of-invisible-colleges/ao-react.git' ~/ao-react
+        fi
         if [ -f "$CONFIG_FILE" ]; then
             echo configuration.js already exists
         else
@@ -196,8 +215,8 @@ case $AO in
         echo ""
 
         pushd ~/ao-react
-        npm install
-        npm run webpack
+        #npm install
+        #npm run webpack
         popd
         
         NODE_PARAMS='--experimental-specifier-resolution=node -r dotenv/config'
@@ -207,11 +226,12 @@ esac
 # ------------------- Step 4 - NGINX Setup -------------------
 
  echo ""
- echo -e "You still there? I need to ask you some questions! \n\n${BLUE}(enter)${RESET}"
+ echo -en "You still there? I might need your input here! \n\n${BLUE}(enter)${RESET}"
  read
 
  initialize_nginx
  make_site ao "FILE_ROOT=${HOME}/ao-${AO}/dist"
+ echo ""
  configure_domain_for_site ao
  enable_ssl
 
@@ -220,9 +240,7 @@ esac
 # ------------------- Step 7 - Systemd Setup -------------------
 
 READY=''
-echo -e "\n${BOLD}Alright, almost there!${RESET} Now we just need to \
-    set up the system daemons for Tor, Bitcoin, Lightning, and the AO\
-     so that everything opens on startup."
+echo -e "\n${BOLD}Alright, almost there!${RESET} Now we just need to set up the system daemons for Tor, Bitcoin, Lightning, and the AO so that everything opens on startup."
 while [[ -z $READY ]]; do
     echo -en "${BLUE}You ready? (y/n):${RESET} "
     read -n1 ao_select
@@ -255,20 +273,21 @@ build_service_from_template bitcoin "BITCOIND=`which bitcoind`"
 activate_service bitcoin
 
 echo ""
-build_service_from_template lightningd "LIGHTNINGD=`which lightningd`"
-activate_service lightningd
+build_service_from_template lightning "LIGHTNINGD=`which lightningd`"
+activate_service lightning
 
 echo ""
 build_service_from_template ao "NODE=`which node`" "AO=$AO" "NODE_PARAMS=$NODE_PARAMS"
 activate_service ao
 
-echo ""
+echo "this should be nginx"
 activate_service nginx
 
 # ------------------- Step 8 - Port Testing -------------------
 
 echo ""
 echo -e "${BOLD}One more thing!${RESET} We need to make sure that your ports are open."
+echo ""
 check_ports
 
 # ------------------- Step 9 - Health Check -------------------

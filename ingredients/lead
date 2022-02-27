@@ -115,12 +115,12 @@ remember() {
         echo "Keys must consist only of capital letters and underscores"
     fi
 
-    if [[ ! $VALUE =~ ^[A-Za-z0-9/_.]+$ ]]; then
-        echo "Valid characters for env values: letters, numbers, \".\",\"/\",\"_\""
+    if [[ ! $VALUE =~ ^[A-Za-z0-9/_.:]+$ ]]; then
+        echo "Valid characters for env values: letters, numbers, \".\",\"/\",\"_\"",\":\"
     fi
 
     # If we're setting a valid key/value pair
-    if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._]*$ ]]; then
+    if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._:]*$ ]]; then
 
         # If we're trying to set the value to something new
         if [[ ! $(env | grep ${KEY}) = $1 ]]; then
