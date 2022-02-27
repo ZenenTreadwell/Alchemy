@@ -98,16 +98,19 @@ remember "AO=${AO}"
 
 echo ""
 if [ $AO = "3" ] || [ $AO = 'react' ]; then
-    if ! check_exists nvm; then
+    if [ -z $NVM_DIR ]; then
         install_nvm
+        source ingredients/iron
     else
         echo -e "${BLUE}Node${RESET} already installed"
         echo ""
     fi
 
-    echo "Setting Node to v16.13.0 for compatibility"
+    echo "Setting Node to ${BLUE}v16.13.0${RESET} for compatibility"
     set_node_to v16.13.0
+    echo ""
     echo -e "${GREEN}Done!${RESET}"
+    echo ""
 fi
 
 if [ $AO = "3" ] || [ $AO = 'react' ]; then
@@ -206,73 +209,13 @@ esac
  echo ""
  echo -e "You still there? I need to ask you some questions! \n\n${BLUE}(enter)${RESET}"
  read
- echo ""
- read -p "Do you have a domain name pointing to this computer? (y/n): " dns
- echo ""
- case $dns in
-     y | Y)
-         echo "Good to hear! What is it?"
-         read -p "http://" domain
-         ;;
-     *)
-         echo "Okay, let's just leave it open for now."
-         domain=$(dig @resolver4.opendns.com myip.opendns.com +short)
-         anywhere=1
-         echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"
-         ;;
- esac
 
- if [ "$anywhere" -eq 1 ]; then
-     ACCESS_POINT=http://localhost
- else
-     ACCESS_POINT=https://$domain
- fi
+ initialize_nginx
+ make_site ao "FILE_ROOT=${HOME}/ao-${AO}/dist"
+ configure_domain_for_site ao
+ enable_ssl
 
- echo ""
-
- # Making sure this version of NGINX supports sites-enabled
- if [[ -z $(sudo cat /etc/nginx/nginx.conf | grep sites-enabled) ]]; then
-     sudo mkdir -p /etc/nginx/sites-available
-     sudo mkdir -p /etc/nginx/sites-enabled
-     sudo cp resources/base.nginx.conf /etc/nginx/nginx.conf
- fi
-
- sudo mkdir -p /etc/nginx/logs
-
- AO_NGINX_CONF=/etc/nginx/sites-available/ao
- sudo cp resources/ao.nginx.conf $AO_NGINX_CONF
-
- if [ -n $anywhere ]; then
-     sudo sed -i "s#SERVER_NAME#_#" $AO_NGINX_CONF
- else
-     sudo sed -i "s#SERVER_NAME#${domain}#" $AO_NGINX_CONF
- fi
-
- sudo sed -i "s#FILE_ROOT#${HOME}/ao-react/dist#" $AO_NGINX_CONF
-
- if [ ! -e /etc/nginx/sites-enabled/ao ]; then
-     sudo ln -s /etc/nginx/sites-available/ao /etc/nginx/sites-enabled/
- fi
- echo ""
- echo "Excellent! We've configured $AO_NGINX_CONF to serve your AO from $domain"
- echo ""
-
- if [ -z $anywhere ]; then
-     read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 ssl
-     echo ""
-     case $ssl in
-         y | Y)
-             echo "Alright, let's get Certbot in here!"
-             install_if_needed python3 certbot python3-certbot-nginx
-             echo -e "${BOLD}Take it away, Certbot${NC}"
-             sudo certbot --nginx
-             ;;
-         *)
-             echo "Yea, SSL is lame anyways..."
-             ;;
-     esac
- fi
- echo ""
+ echo -e "Excellent! We've configured this computer to serve your AO from ${BLUE}${ACCESS_POINT}${RESET}"
 
 # ------------------- Step 7 - Systemd Setup -------------------
 

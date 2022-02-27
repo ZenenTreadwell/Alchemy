@@ -1,5 +1,6 @@
 # Alchemy
-A collection of scripts for working with bare metal.
+A collection of scripts for transmuting bare metal and encouraging
+autonomous decentralization.
 
 ## Initialization
 Ideally, this package should be able to be initialized by running `make alchemy`.
@@ -11,7 +12,7 @@ in which case you can initialize the environment by running the following:
 Recipes are a core component of the Alchemy ecosystem. They are stored
 in the `recipes/` directory and common ones can be sourced via make.
 
-Some common recipes are listed below:
+Some basic recipes are listed below:
 
 `make autonomy` runs an interactive installer to get AO up and running on the current system
 
@@ -53,3 +54,8 @@ Due to the nature of images being both bulky and platform-dependent, they are no
 
 The `resources/` folder contains templates and other files that are small enough to be moved around with the scripts.
 Some of these files are fragile and should be considered read-only.
+
+### Design Notes
+#### POSIX Compatibility
+This is important to aim for in the name of making something that is
+as universal as possible. Aim to only use /bin/sh compatible syntax.

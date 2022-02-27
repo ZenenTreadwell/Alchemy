@@ -19,10 +19,14 @@ locate_torrc() {
             TORRCPATH='/etc/tor/torrc'
         elif [ -e $HOME/.tor/torrc ]; then
             TORRCPATH="${HOME}/.tor/torrc"
+        elif [ -e $HOME/.tor/torrc ]; then
+            TORRCPATH="${HOME}/.tor/torrc"
         else
             echo -e "${RED}Uh oh...${RESET} I couldn't figure out\
                 where your torrc file is. That might cause some issues"
-            exit 1
+            sleep 3
+            echo "Anyways..."
+            sleep 2
         fi
     fi
 
@@ -72,27 +76,167 @@ get_external_ip() {
     remember "EXTERNAL_IP=$EXTERNAL_IP"
 }
 
-get_domain_name() {
-    read -p "Do you have a domain name pointing to this computer? (y/n): " dns
-    echo ""
-    case $dns in
-        y | Y)
-            echo "Good to hear! What is it?"
-            read -p "http://" domain
-            ;;
-        *)
-            echo "Okay, let's just leave it open for now."
-            domain=$(dig @resolver4.opendns.com myip.opendns.com +short)
-            anywhere=1
-            echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"
-            ;;
-    esac
+initialize_nginx() {
+    install_if_needed nginx
 
-    if [ "$anywhere" -eq 1 ]; then
+     # Making sure this version of NGINX supports sites-enabled                                                                                                                                                                       
+     if [[ -z $(sudo cat /etc/nginx/nginx.conf | grep sites-enabled) ]]; then                                                                                                                                                         
+         sudo mkdir -p /etc/nginx/sites-available                                                                                                                                                                                     
+         sudo mkdir -p /etc/nginx/sites-enabled                                                                                                                                                                                       
+         sudo cp resources/nginx/base.nginx.conf /etc/nginx/nginx.conf                                                                                                                                                                      
+     fi                                                                                                                                                                                                                               
+
+     sudo mkdir -p /etc/nginx/logs                                                                                                                                                                                                    
+}
+
+make_site() {
+    SITE=${1}
+    shift
+    if [ -f resources/nginx/${SITE}.nginx.conf ]; then
+        NGINX_SITE_LOCATION=/etc/nginx/sites-available/${SITE}                                                                                                                                                                                     
+        if [ -f $NGINX_SITE_LOCATION ]; then
+            echo -en "You already have a site available for ${SITE}, \
+                what would you like to do? ${BOLD}R${RESET}eset it,\
+                ${BOLD}A${RESET}ctivate it, or do ${BOLD}N${RESET}\
+                othing? ( r / a / n ): "
+            read whatdo
+            case $whatdo in
+                "R" | "r")
+                    echo "Resetting sites-available/${SITE}"
+                    sudo rm /etc/nginx/sites-available/${SITE}
+                    ;;
+                "A" | "a")
+                    echo "Activating sites-available/${SITE}"
+                    if [ ! -e /etc/nginx/sites-enabled/${SITE} ]; then                                                                                                                                                                                    
+                        sudo ln -s /etc/nginx/sites-available/${SITE} /etc/nginx/sites-enabled/                                                                                                                                                           
+                    fi 
+                    ;;
+                "N" | "n")
+                    echo "Okay, we'll leave it be."
+                    ;;
+                *)
+                    echo "Instructions unclear, accidentally an choice"
+                    ;;
+            esac
+        fi
+
+        if [ ! -f $NGINX_SITE_LOCATION ]; then
+            sudo cp resources/nginx/${SITE}.nginx.conf $NGINX_SITE_LOCATION
+
+            for keyval; do
+                KEY=$(echo $keyval | cut -d'=' -f 1)
+                VAL=$(echo $keyval | cut -d'=' -f 2)
+
+                echo "Substituting $KEY for $VAL"
+                sudo sed -i "s#$KEY#$VAL#g" $NGINX_SITE_LOCATION
+            done
+
+            if [ ! -e /etc/nginx/sites-enabled/${SITE} ]; then                                                                                                                                                                                    
+                sudo ln -s /etc/nginx/sites-available/${SITE} /etc/nginx/sites-enabled/                                                                                                                                                           
+            fi 
+        fi
+    else
+        echo ""
+        echo -e "${RED}Sorry${RESET}, ${SITE} isn't available as an nginx template"
+        echo "We have..."
+        echo `ls resources/nginx`
+    fi
+}
+
+get_domain() {
+    if [ ! -z $DOMAIN ]; then
+        echo -e "Your domain name is currently set to ${BLUE}${DOMAIN}${RESET}"
+        echo -ne "would you like to change it? ${BLUE}(y/n): ${RESET}" 
+        read newdns
+        case $newdns in
+            y | Y)
+                forget "DOMAIN"
+                ;;
+        esac
+        echo ""
+    fi
+
+    if [ -z $DOMAIN ]; then
+        echo -en "Do you have a domain name pointing to this computer? ${BLUE}(y/n)${RESET}: "
+        read dns
+        echo ""
+        case $dns in
+            y | Y)
+                echo "Good to hear! What is it?"
+                OKAY=0
+                while [ $OKAY -eq 0 ]; do
+                    echo -n "http://"
+                    read DOMAIN
+                    echo ""
+                    echo -ne "is ${BLUE}http://${DOMAIN}${RESET} correct? ${BLUE}(y/n): ${RESET}"
+                    read correct
+                    case $correct in
+                        y | Y)
+                            OKAY=1
+                            ;;
+                        *)
+                            echo "Okay, let's try again! What is your domain name?"
+                            ;;
+                    esac
+                done
+                echo "${BLUE}${DOMAIN}${RESET}, got it."
+                remember "DOMAIN=${DOMAIN}"
+                ;;
+            *)
+                echo "Okay, let's just leave it open for now."
+                ;;
+        esac
+    fi
+}
+
+configure_domain_for_site() {
+    get_domain
+    if [ -f /etc/nginx/sites-enabled/${1} ]; then
+        if [ ! -z $DOMAIN ]; then
+            sed -i "s#server_name.*#server_name $DOMAIN;#" /etc/nginx/sites-enabled/${1}
+        else
+            echo "You didn't provide a domain to configure!"
+        fi
+    else
+        echo "Sorry, we don't have a site enabled for ${1}"
+    fi
+    echo ""
+}
+
+enable_ssl() {
+    if [ ! -z $SSL ]; then
+        echo "We've already gone through the SSL enabling process! Skipping"
+    else 
+        if [ ! -z $DOMAIN ]; then                                                                                                                                                                                                        
+            read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 ssl                                                                                                                                                          
+            echo ""                                                                                                                                                                                                                      
+            case $ssl in                                                                                                                                                                                                                 
+                y | Y)                                                                                                                                                                                                                   
+                    echo "Alright, let's get Certbot in here!"                                                                                                                                                                           
+                    install_if_needed python3 certbot python3-certbot-nginx                                                                                                                                                              
+                    echo -e "${BOLD}Take it away, Certbot${NC}"                                                                                                                                                                          
+                    SSL=$(sudo certbot --nginx)
+                    remember "SSL=$SSL"
+                    ;;                                                                                                                                                                                                                   
+                *)                                                                                                                                                                                                                       
+                    echo "Yea, SSL is like, totally whatever anyways..."                                                                                                                                                                                   
+                    ;;                                                                                                                                                                                                                   
+            esac
+        else
+            echo "We can't configure SSL without a domain! Skipping"
+        fi  
+    fi
+
+    if [ -z $DOMAIN ]; then
         ACCESS_POINT=http://localhost
     else
-        ACCESS_POINT=https://$domain
+        if [ -z $SSL ]; then
+        ACCESS_POINT=http://$DOMAIN
+        else
+        ACCESS_POINT=https://$DOMAIN
+        fi
     fi
+    remember "ACCESS_POINT=${ACCESS_POINT}"
 }
 
 build_service_from_template() {

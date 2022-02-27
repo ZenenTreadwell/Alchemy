@@ -156,7 +156,7 @@ case $boot in
 esac
 echo ""
 WP_NGINX_CONF=/etc/nginx/sites-available/wp
-sudo cp resources/wordpress.nginx.conf $WP_NGINX_CONF
+sudo cp resources/nginx/wordpress.nginx.conf $WP_NGINX_CONF
 sudo sed -i "s#SERVER_NAME#${domain}#" $WP_NGINX_CONF
 sudo sed -i "s#FILE_ROOT#${WP_DIR}/wordpress#" $WP_NGINX_CONF
 sudo ln -s /etc/nginx/sites-available/wp /etc/nginx/sites-enabled/

@@ -100,8 +100,13 @@ install_if_needed() {
     done
 }
 
-# This one looks like gibberish because we're using regex, don't worry.
+# These two might look like gibberish because we're using regex, don't worry.
 # It takes values and stores them away in the env for later reference
+forget() {
+    unset ${1}
+    sed -i "/^${1}.*$/d" .env
+}
+
 remember() {
     KEY=$(echo ${1} | cut -d'=' -f 1)
     VALUE=$(echo ${1} | cut -d'=' -f 2)
@@ -114,10 +119,13 @@ remember() {
         echo "Valid characters for env values: letters, numbers, \".\",\"/\",\"_\""
     fi
 
+    # If we're setting a valid key/value pair
     if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._]*$ ]]; then
-        if [[ -n $(env | grep ${KEY}) ]]; then
+
+        # If we're trying to set the value to something new
+        if [[ ! $(env | grep ${KEY}) = $1 ]]; then
             echo -e "${BLUE}${KEY}${RESET} has already been defined in the env!"
-            echo -n "would you like to overwrite it? ${BLUE}(y/n)${RESET} "
+            echo -en "would you like to overwrite it? ${BLUE}(y/n)${RESET} "
             read overwrite
             case $overwrite in
                 "y" | "Y")
@@ -128,10 +136,12 @@ remember() {
                     ;;
             esac
         else
+            forget ${KEY}
             echo "${1}" >> .env
             export ${1}
         fi
     fi
 }
+
 
 LEAD=1
