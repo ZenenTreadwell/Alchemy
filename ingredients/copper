@@ -1,9 +1,9 @@
 #!/bin/sh
 # Bare Metal Alchemist, 2022
 
-############################################# 
-#             Copper - ♀                    # 
-############################################# 
+#############################################
+#             Copper - ♀                    #
+#############################################
 
 # Copper wires form the backbone of electrical systems worldwide
 # and much of the internet as a whole.
@@ -21,7 +21,7 @@ locate_torrc() {
             TORRCPATH="${HOME}/.tor/torrc"
         else
             echo -e "${RED}Uh oh...${RESET} I couldn't figure out\
-                where your torrc file is. That might cause some issues"                                                                                                             
+                where your torrc file is. That might cause some issues"
             exit 1
         fi
     fi
@@ -41,10 +41,10 @@ configure_tor() {
     read torrc_reset
     case $torrc_reset in
         "Y" | "y")
-            cp resources/torrc-template .                                                                                                                                                                                                 
-            sudo sed -i "s#USER#${USER}#g" torrc-template                                                                                                                                                                                 
-            sudo sed -i "s#HOME#${HOME}#g" torrc-template                                                                                                                                                                                 
-            sudo mv torrc-template $TORRCPATH                                                                                                                                                                                         
+            cp resources/torrc-template .
+            sudo sed -i "s#USER#${USER}#g" torrc-template
+            sudo sed -i "s#HOME#${HOME}#g" torrc-template
+            sudo mv torrc-template $TORRCPATH
             echo -e "${GREEN}Torrc file reset!${RESET}"
             ;;
         '*')
@@ -73,55 +73,104 @@ get_external_ip() {
 }
 
 get_domain_name() {
-    read -p "Do you have a domain name pointing to this computer? (y/n): " dns                                                                                                                                                       
-    echo ""                                                                                                                                                                                                                          
-    case $dns in                                                                                                                                                                                                                     
-        y | Y)                                                                                                                                                                                                                       
-            echo "Good to hear! What is it?"                                                                                                                                                                                         
-            read -p "http://" domain                                                                                                                                                                                                 
-            ;;                                                                                                                                                                                                                       
-        *)                                                                                                                                                                                                                           
-            echo "Okay, let's just leave it open for now."                                                                                                                                                                           
-            domain=$(dig @resolver4.opendns.com myip.opendns.com +short)                                                                                                                                                             
-            anywhere=1                                                                                                                                                                                                               
-            echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"                                                                                                                                              
-            ;;                                                                                                                                                                                                                       
-    esac                                                                                                                                                                                                                             
+    read -p "Do you have a domain name pointing to this computer? (y/n): " dns
+    echo ""
+    case $dns in
+        y | Y)
+            echo "Good to hear! What is it?"
+            read -p "http://" domain
+            ;;
+        *)
+            echo "Okay, let's just leave it open for now."
+            domain=$(dig @resolver4.opendns.com myip.opendns.com +short)
+            anywhere=1
+            echo "Try accessing this AO from either localhost, 127.0.0.1, or ${domain}"
+            ;;
+    esac
 
-    if [ "$anywhere" -eq 1 ]; then                                                                                                                                                                                                   
-        ACCESS_POINT=http://localhost                                                                                                                                                                                                
-    else                                                                                                                                                                                                                             
-        ACCESS_POINT=https://$domain                                                                                                                                                                                                 
-    fi  
+    if [ "$anywhere" -eq 1 ]; then
+        ACCESS_POINT=http://localhost
+    else
+        ACCESS_POINT=https://$domain
+    fi
+}
+
+build_service_from_template() {
+    SERVICE=$1
+    shift
+    echo ""
+    if [ -f resources/service-templates/${SERVICE} ]; then
+        echo "Creating $SERVICE.service..."
+        SERVICE_FILE=/etc/systemd/system/${SERVICE}.service
+        if [ -f "$SERVICE_FILE" ]; then
+            echo "Seems like you've already installed ${SERVICE} here!"
+            echo -n "Would you like to recreate it? ${BLUE}(y/n)${RESET} "
+            read reset
+            case reset in
+                "Y" | "y")
+                    sudo rm $SERVICE_FILE
+                    ;;
+                "N" | "n")
+                    echo "Okay, we'll leave it as is."
+                    ;;
+            esac
+        fi
+
+        if [ ! -f "$SERVICE_FILE" ]; then
+            sudo cp resources/service-templates/${SERVICE} $SERVICE_FILE
+
+            # Common template values
+            sudo sed -i "s#USER#${USER}#g" $SERVICE_FILE
+            sudo sed -i "s#HOME#${HOME}#g" $SERVICE_FILE
+            for keyval; do
+                KEY=$(echo $keyval | cut -d'=' -f 1)
+                VAL=$(echo $keyval | cut -d'=' -f 2)
+
+                echo "Substituting $KEY for $VAL"
+                sudo sed -i "s#$KEY#$VAL#g" $SERVICE_FILE
+            done
+        fi
+    else
+        echo "No service template available for $SERVICE"
+    fi
+}
+
+activate_service() {
+    SERVICE_FILE=/etc/systemd/system/${SERVICE}.service
+    if [ -f "$SERVICE_FILE" ]; then
+        echo -e "Enabling and starting ${GREEN}${SERVICE}${RESET}"
+        sudo systemctl enable ${SERVICE}
+        sudo systemctl start ${SERVICE}
+    fi
 }
 
 check_ports() {
-	install_if_needed nmap                                                                                                                                                                                                            
-	nmap -Pn $domain > nmap.txt                                                                                                                                                                                                       
-	OPEN=1                                                                                                                                                                                                                            
-	if grep -qE "^80/.*(open|filtered)" nmap.txt; then                                                                                                                                                                                
-		echo -e "I can see port ${GREEN}80${RESET}!"                                                                                                                                                                                  
-	else                                                                                                                                                                                                                              
-		echo -e "Uh oh, port ${RED}80${RESET} isn't showing up..."                                                                                                                                                                    
-		OPEN=0                                                                                                                                                                                                                        
-	fi                                                                                                                                                                                                                                
+	install_if_needed nmap
+	nmap -Pn $domain > nmap.txt
+	OPEN=1
+	if grep -qE "^80/.*(open|filtered)" nmap.txt; then
+		echo -e "I can see port ${GREEN}80${RESET}!"
+	else
+		echo -e "Uh oh, port ${RED}80${RESET} isn't showing up..."
+		OPEN=0
+	fi
 
-	if grep -qE "^443/.*(open|filtered)" nmap.txt; then                                                                                                                                                                               
-		echo -e "I can see port ${GREEN}443${RESET} as well!"                                                                                                                                                                         
-	else                                                                                                                                                                                                                              
-		echo -e "Uh oh, port ${RED}443${RESET} isn't showing up..."                                                                                                                                                                   
-		OPEN=0                                                                                                                                                                                                                        
-	fi                                                                                                                                                                                                                                
-	rm nmap.txt                                                                                                                                                                                                                       
-	echo ""                                                                                                                                                                                                                           
-	if [[ $OPEN -eq 0 ]]; then                                                                                                                                                                                                        
-		echo -e "${RED}Port configuration needed.${RESET} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."                                                               
-		echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."                                                                                             
+	if grep -qE "^443/.*(open|filtered)" nmap.txt; then
+		echo -e "I can see port ${GREEN}443${RESET} as well!"
+	else
+		echo -e "Uh oh, port ${RED}443${RESET} isn't showing up..."
+		OPEN=0
+	fi
+	rm nmap.txt
+	echo ""
+	if [[ $OPEN -eq 0 ]]; then
+		echo -e "${RED}Port configuration needed.${RESET} Something (probably your wireless router) is blocking us from serving this page to the rest of the internet."
+		echo "Port forwarding is relatively simple, but as it stands it is beyond the scope of this script to be able to automate it."
 		echo -e "You'll probably need to look up the login information for your specific router and forward the red ports to the local IP of this computer (${BOLD}$(ip route | grep default | grep -oP "(?<=src )[^ ]+")${RESET})."
-		echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${RESET}"                                                                                                   
-		echo "That's all the help I can give you regarding port forwarding. Good luck!"                                                                                                                                            
-		echo ""                                                                                                                                                                                                                    
-	fi 
+		echo -e "You can log into your router at this IP address: ${BOLD}$(route -n | grep ^0.0.0.0 | awk '{print $2}')${RESET}"
+		echo "That's all the help I can give you regarding port forwarding. Good luck!"
+		echo ""
+	fi
 }
 
 

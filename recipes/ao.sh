@@ -53,7 +53,7 @@ case $DISTRO in
         fi
 
         install_if_needed wget python gmp sqlite3 autoconf-archive pkgconf libev \
-            python-mako python-pip net-tools zlib libsodium gettext dnsutils nginx
+            python-mako python-pip net-tools zlib libsodium gettext nginx
         ;;
     "mac")
         # install_if_needed better-computer
@@ -257,25 +257,29 @@ esac
  echo "Excellent! We've configured $AO_NGINX_CONF to serve your AO from $domain"
  echo ""
 
- read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 ssl
- echo ""
- case $ssl in
-     y | Y)
-         echo "Alright, let's get Certbot in here!"
-         install_if_needed python3 certbot python3-certbot-nginx
-         echo -e "${BOLD}Take it away, Certbot${NC}"
-         sudo certbot --nginx
-         ;;
-     *)
-         echo "Yea, SSL is lame anyways..."
-         ;;
- esac
+ if [ -z $anywhere ]; then
+     read -p "Would you like to enable SSL via Certbot? (y/n): " -n1 ssl
+     echo ""
+     case $ssl in
+         y | Y)
+             echo "Alright, let's get Certbot in here!"
+             install_if_needed python3 certbot python3-certbot-nginx
+             echo -e "${BOLD}Take it away, Certbot${NC}"
+             sudo certbot --nginx
+             ;;
+         *)
+             echo "Yea, SSL is lame anyways..."
+             ;;
+     esac
+ fi
  echo ""
 
 # ------------------- Step 7 - Systemd Setup -------------------
 
 READY=''
-echo -e "\n${BOLD}Alright, almost there!${RESET} Now we just need to set up the system daemons for Tor, Bitcoin, Lightning, and the AO so that everything opens on startup."
+echo -e "\n${BOLD}Alright, almost there!${RESET} Now we just need to \
+    set up the system daemons for Tor, Bitcoin, Lightning, and the AO\
+     so that everything opens on startup."
 while [[ -z $READY ]]; do
     echo -en "${BLUE}You ready? (y/n):${RESET} "
     read -n1 ao_select
@@ -293,21 +297,7 @@ while [[ -z $READY ]]; do
     esac
 done
 
-echo ""
-echo "Creating tor.service..."
-TOR_SERVICE=/etc/systemd/system/tor.service
-if [ -f "$TOR_SERVICE" ]; then
-    echo "Seems like you've already got tor here!"
-else
-    sudo cp resources/tor-service-template $TOR_SERVICE
-
-    # Making sure all values have been de-templated
-    sudo sed -i "s#USER#${USER}#g" $TOR_SERVICE
-    sudo sed -i "s#HOME#${HOME}#g" $TOR_SERVICE
-    sudo sed -i "s#TORRCPATH#${TORRCPATH}#g" $TOR_SERVICE
-    sudo sed -i "s#TORPATH#$(which tor)#g" $TOR_SERVICE
-fi
-
+build_service_from_template tor "TORRCPATH=$TORRCPATH" "TORPATH=`which tor`"
 
 # Creating the .tor directory
 sudo mkdir -p $HOME/.tor
@@ -315,67 +305,22 @@ sudo chown tor $HOME/.tor
 sudo chgrp $USER $HOME/.tor
 sudo chmod 770 $HOME/.tor
 
-echo "Enabling and starting Tor"
-sudo systemctl enable tor
-sudo systemctl start tor
+activate_service tor
 
 echo ""
-echo "Creating bitcoin.service..."
-BTC_SERVICE=/etc/systemd/system/bitcoin.service
-if [ -f "$BTC_SERVICE" ]; then
-    echo -e "Seems like you've already have a bitcoin service!"
-else
-    sudo cp resources/bitcoin-service-template $BTC_SERVICE
-
-    # Making sure all values have been de-templated
-    sudo sed -i "s#USER#${USER}#g" $BTC_SERVICE
-    sudo sed -i "s#HOME#${HOME}#g" $BTC_SERVICE
-    sudo sed -i "s#BITCOIND#$(which bitcoind)#g" $BTC_SERVICE
-fi
-echo -e "Enabling and starting ${GREEN}Bitcoin${RESET}"
-sudo systemctl enable bitcoin
-sudo systemctl start bitcoin
+build_service_from_template bitcoin "BITCOIND=`which bitcoind`"
+activate_service bitcoin
 
 echo ""
-echo "Creating lightning.service..."
-LN_SERVICE=/etc/systemd/system/lightning.service
-if [ -f "$LN_SERVICE" ]; then
-    echo -e "Seems like you've already have a lightning service!"
-else
-    sudo cp resources/lightning-service-template $LN_SERVICE
-
-    # Making sure all values have been de-templated
-    sudo sed -i "s#USER#${USER}#g" $LN_SERVICE
-    sudo sed -i "s#HOME#${HOME}#g" $LN_SERVICE
-    sudo sed -i "s#LIGHTNINGD#$(which lightningd)#g" $LN_SERVICE
-fi
-echo -e "Enabling and starting ${GREEN}lightning${RESET} "
-sudo systemctl enable lightning
-sudo systemctl start lightning
+build_service_from_template lightningd "LIGHTNINGD=`which lightningd`"
+activate_service lightningd
 
 echo ""
-echo "Creating ao.service..."
-AO_SERVICE=/etc/systemd/system/ao.service
-if [ -f "$AO_SERVICE" ]; then
-    echo "Seems like you've already added one of these!"
-else
-    sudo cp resources/ao-service-template $AO_SERVICE
-
-    # Making sure all values have been de-templated
-    sudo sed -i "s#USER#${USER}#g" $AO_SERVICE
-    sudo sed -i "s#HOME#${HOME}#g" $AO_SERVICE
-    sudo sed -i "s#NODE#$(which node)#g" $AO_SERVICE
-    sudo sed -i "s#AO#${AO}#g" $AO_SERVICE
-    sudo sed -i "s#NODE_PARAMS#${NODE_PARAMS}#g" $AO_SERVICE
-fi
-echo -e "Enabling and starting the ${GREEN}AO${RESET}'s backend"
-sudo systemctl enable ao
-sudo systemctl start ao
+build_service_from_template ao "NODE=`which node`" "AO=$AO" "NODE_PARAMS=$NODE_PARAMS"
+activate_service ao
 
 echo ""
-echo -e "Enabling and starting ${GREEN}NGINX${RESET} as the webserver"
-sudo systemctl enable nginx
-sudo systemctl start nginx
+activate_service nginx
 
 # ------------------- Step 8 - Port Testing -------------------
 
@@ -384,6 +329,7 @@ echo -e "${BOLD}One more thing!${RESET} We need to make sure that your ports are
 check_ports
 
 # ------------------- Step 9 - Health Check -------------------
+
  echo '*********************************************************'
  echo -e "*                  ${BOLD}Version Information${RESET}                  *"
  echo '*********************************************************'
