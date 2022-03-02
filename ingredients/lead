@@ -19,6 +19,38 @@ BOLD="\e[1m"
 ULINE="\e[4m"
 RESET="\e[0m"
 
+# TODO -- there are actually a lot of ANSI codes that can be used
+# 0 - Reset (normal attributes)
+# 1 - Bold or increased intensity
+# 2 - Faint (opposite of bold)
+# 3 - Italic
+# 4 - Underline
+# 5 - Blink slowly
+# 6 - Blink quickly
+# 7 - Swap foreground and background
+# 8 - Conceal
+# 9 - Cross-out
+# 10 - Default font
+# 11-19 - Alternate fonts
+# 20 - Fraktur font
+# 21 - Bold off or double underline
+# 22 - Bold and faint off
+# 23 - Italic and fraktur off
+# 24 - Underline off
+# 25 - Blink off
+# 27 - Undo foreground and background swapping
+# 28 - Conceal off
+# 29 - Cross-out off
+# 39 - Default text color
+# 49 - Default background color
+# 51 - Framed
+# 52 - Encircled
+# 53 - Overlined
+# 54 - Frame and encircle off
+# 55 - Overline off
+
+# TODO -- these should be implemented as part of the syntax for "say"
+
 # --------------- Traps ---------------
 
 # Traps, in the case of shell scripting, listen for certain signals 
@@ -29,27 +61,38 @@ if [[ $SHLVL -gt 1 ]]; then
     # Make sure that ctrl+C consistently exits the script
     trap "exit" INT 
     # Give informative error messages when we receive ERR
-    trap 'echo -e "${RED}Oops...${RESET} Something went wrong on line $LINENO of this script. Exit code was $?" >&2' ERR
+    trap 'say "${RED}Oops...${RESET} Something went wrong on line $LINENO of this script. Exit code was $?" >&2' ERR
 fi
 
 
 # --------------- Environment Setup ---------------
 
 # If there's an env file, export it's contents to the environment
-if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
-else
-    if [ -z $ALCHEMY ]; then
-        echo "No .env file, this might cause some issues..."
+source_env() {
+    if [ -f .env ]; then
+        export $(grep -v '^#' .env | xargs)
+    else
+        if [ -z $ALCHEMY ]; then
+            say "No .env file, this might cause some issues..."
+        fi
     fi
-fi
+}
 
+# This is how we call a function that we have already defined.
+# This one takes no arguments (words after the function name
+source_env
 
 # --------------- Functions ---------------
 
 # Coding Moment: generally, whenever you see something with brackets
 # at the end of it, like this() or like(this), it's a function!
 # It takes inputs and gives (or does) something as an output
+
+# 'say' is a simple function that imitates "echo"
+# This needs to be built out way more! Replace echo for POSIX compatibility
+say() {
+    printf "%b\n" "${1}"
+}
 
 # Checks to see if we can use a command or not
 check_exists() {
@@ -64,47 +107,60 @@ install_if_needed() {
             "debian")
                 # TODO Better installation detection than check_exists
                 if [ -z $(check_exists $package) ]; then
-                    echo "installing" $package
+                    say "installing $package"
                     sudo apt install -y $package
                 else
-                    echo $package 'already installed!'
+                    say "$package already installed!"
                 fi
                 ;;
             "arch")
                 if pacman -Qi $package &>/dev/null; then
-                    echo $package 'already installed!'
+                    say "$package already installed!"
                 else
-                    echo "installing" $package
+                    say "installing $package"
                     sudo pacman -S $package --noconfirm --needed
                 fi
                 ;;
             "fedora")
                 # TODO Better installation detection than "check_exists"
                 if [ -z $(check_exists $package) ]; then
-                    echo "installing" $package
+                    say "installing $package"
                     sudo dnf install -y $package
                 else
-                    echo $package 'already installed!'
+                    say "$package already installed!"
                 fi
                 ;;
             "mac")
                 # TODO Better installation detection than "check_exists"
                 if [ -z $(check_exists $package) ]; then
-                    echo "installing" $package
+                    say "installing $package"
                     brew install $package
                 else
-                    echo $package 'already installed!'
+                    say "$package already installed!"
                 fi
                 ;;
         esac
     done
 }
 
-# These two might look like gibberish because we're using regex, don't worry.
+
+# --------------- Memory ---------------
+# These two functions might look like gibberish because we're using regex,
+# short for REGular EXpression. It's a form of matching text to a pattern.
+
+
 # It takes values and stores them away in the env for later reference
 forget() {
-    unset ${1}
-    sed -i "/^${1}.*$/d" .env
+    DOTENV_ENTRY=$(cat .env | grep ^${1}\=)
+    if [ -n "$DOTENV_ENTRY" ]; then
+        unset ${1}
+        sed -i "/^${1}.*$/d" .env
+    else
+        say "I already don't remember ${BLUE}${1}${RESET}..."
+    fi
+
+    # Once we've made changes, we need to make sure we're up to date
+    source_env
 }
 
 remember() {
@@ -122,9 +178,14 @@ remember() {
     # If we're setting a valid key/value pair
     if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._:]*$ ]]; then
 
-        # If we're trying to set the value to something new
-        if [[ ! $(env | grep ${KEY}) = $1 ]]; then
-            echo -e "${BLUE}${KEY}${RESET} has already been defined in the env!"
+        DOTENV_ENTRY=$(cat .env | grep ${KEY})
+        # If something already exists and we're trying to set it to something new
+        if [ -n "$DOTENV_ENTRY" ] && [[ ! $DOTENV_ENTRY = $1 ]]; then
+            echo -e "I'm trying to remember ${BLUE}${1}${RESET}, but..."
+            echo ""
+            echo -e "${BLUE}${DOTENV_ENTRY}${RESET}"
+            echo -e "This has already been defined in the .env file!"
+            echo ""
             echo -en "would you like to overwrite it? ${BLUE}(y/n)${RESET} "
             read overwrite
             case $overwrite in
@@ -136,12 +197,14 @@ remember() {
                     ;;
             esac
         else
-            forget ${KEY}
+            unset ${KEY}
             echo "${1}" >> .env
             export ${1}
         fi
     fi
-}
 
+    # Once we've made changes, we need to make sure we're up to date
+    source_env
+}
 
 LEAD=1
