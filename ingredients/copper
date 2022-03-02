@@ -13,17 +13,14 @@
 
 locate_torrc() {
     if [ -n $TORRCPATH ]; then
-        if [ -e /usr/local/etc/tor/torrc ]; then
+        if [ -f $HOME/.tor/torrc ]; then
+            TORRCPATH="${HOME}/.tor/torrc"
+        elif [ -f /usr/local/etc/tor/torrc ]; then
             TORRCPATH='/usr/local/etc/tor/torrc'
-        elif [ -e /etc/tor/torrc ]; then
+        elif [ -f /etc/tor/torrc ]; then
             TORRCPATH='/etc/tor/torrc'
-        elif [ -e $HOME/.tor/torrc ]; then
-            TORRCPATH="${HOME}/.tor/torrc"
-        elif [ -e $HOME/.tor/torrc ]; then
-            TORRCPATH="${HOME}/.tor/torrc"
         else
-            echo -e "${RED}Uh oh...${RESET} I couldn't figure out\
-                where your torrc file is. That might cause some issues"
+            echo -e "${RED}Uh oh...${RESET} I couldn't figure out where your torrc file is. That might cause some issues"
             sleep 3
             echo "Anyways..."
             sleep 2
@@ -180,7 +177,7 @@ get_domain() {
                             ;;
                     esac
                 done
-                echo "${BLUE}${DOMAIN}${RESET}, got it."
+                echo -e "${BLUE}${DOMAIN}${RESET}, got it."
                 remember "DOMAIN=${DOMAIN}"
                 ;;
             *)
@@ -194,7 +191,7 @@ configure_domain_for_site() {
     get_domain
     if [ -f /etc/nginx/sites-enabled/${1} ]; then
         if [ ! -z $DOMAIN ]; then
-            sed -i "s#server_name.*#server_name $DOMAIN;#" /etc/nginx/sites-enabled/${1}
+            sudo sed -i "s#server_name.*#server_name $DOMAIN;#" /etc/nginx/sites-enabled/${1}
         else
             echo "You didn't provide a domain to configure!"
         fi

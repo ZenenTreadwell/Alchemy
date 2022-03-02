@@ -97,7 +97,7 @@ while [[ -z $AO ]]; do
 
     case $ao_select in
         "1")
-            echo "Minimalism, I like it! Proceeding with ${BLUE}ao-3${RESET} installation"
+            echo -e "Minimalism, I like it! Proceeding with ${BLUE}ao-3${RESET} installation"
             AO=3
             ;;
         "2")
@@ -215,8 +215,8 @@ case $AO in
         echo ""
 
         pushd ~/ao-react
-        #npm install
-        #npm run webpack
+        npm install
+        npm run webpack
         popd
         
         NODE_PARAMS='--experimental-specifier-resolution=node -r dotenv/config'
