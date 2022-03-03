@@ -1,6 +1,7 @@
 [Unit]
 Description=Bitcoin daemon
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=notify
@@ -10,6 +11,8 @@ ExecStart=BITCOIND --daemonwait --server --pid=HOME/.bitcoin/bitcoind.pid
 Type=forking
 PIDFile=HOME/.bitcoin/bitcoind.pid
 Restart=on-failure
+TimeoutStartSec=infinity
+TimeoutStopSec=600
 
 KillSignal=SIGINT
 LimitNOFILE=32768

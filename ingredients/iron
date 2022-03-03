@@ -57,9 +57,11 @@ build_service_from_template() {
             echo "Seems like you've already installed ${SERVICE} here!"
             echo -en "Would you like to recreate it? ${BLUE}(y/n)${RESET} "
             read reset
-            case reset in
+            case $reset in
                 "Y" | "y")
+                    cat /etc/systemd/system/
                     sudo rm $SERVICE_FILE
+                    cat /etc/systemd/system/
                     ;;
                 "N" | "n")
                     echo "Okay, we'll leave it as is."
