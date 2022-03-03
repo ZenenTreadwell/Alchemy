@@ -131,12 +131,12 @@ if [ $AO = "3" ] || [ $AO = 'react' ]; then
     echo -e "${BOLD}Installing Bitcoin Ecosystem${RESET}"
     echo ""
 
-    if ! check_exists bitcoind; then
+    if ! check_for bitcoind; then
         echo -e "Building bitcoind from source... might take a while!"
         install_bitcoin
     fi
 
-    if ! check_exists lightningd; then
+    if ! check_for lightningd; then
         echo -e "Building lightningd from source... here we go again"
         install_lightning
     fi

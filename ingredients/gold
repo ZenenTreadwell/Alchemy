@@ -140,7 +140,7 @@ configure_lightning() {
     read clboss_enable
     case $clboss_enable in
         "y" | "Y")
-            if ! check_exists clboss; then
+            if ! check_for clboss; then
                 install_clboss
             fi
             sed -i "s/#plugin/plugin/" $HOME/.lightning/config

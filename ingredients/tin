@@ -14,9 +14,9 @@
 sha256_check() {
     # Args: <sha256_hash> <filename>
     #
-    if check_exists sha256sum; then
+    if check_for sha256sum; then
         echo "${1}  ${2}" | sha256sum -c
-    elif check_exists sha256; then
+    elif check_for sha256; then
         if [ "$(uname)" = "FreeBSD" ]; then
             sha256 -c "${1}" "${2}"
         else
@@ -35,7 +35,7 @@ http_get() {
     #
     if [ -f "${2}" ]; then
         echo "File ${2} already exists; not downloading again"
-    elif check_exists curl; then
+    elif check_for curl; then
         curl --insecure --retry 5 "${1}" -o "${2}"
     else
         wget --no-check-certificate "${1}" -O "${2}"

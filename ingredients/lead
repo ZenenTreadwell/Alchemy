@@ -16,6 +16,7 @@ RED="\e[0;31m"
 GREEN="\e[0;32m"
 BLUE="\e[0;34m"
 BOLD="\e[1m"
+ITALIC="\e[3m"
 ULINE="\e[4m"
 RESET="\e[0m"
 
@@ -56,7 +57,8 @@ RESET="\e[0m"
 # Traps, in the case of shell scripting, listen for certain signals 
 # that are broadcast by the system and execute a command in response
 
-# We only want these to activate if we're running a recipe
+# We only want these to activate if we're running a recipe, so we
+# check to see if we're running a "shell inside of a shell"
 if [[ $SHLVL -gt 1 ]]; then
     # Make sure that ctrl+C consistently exits the script
     trap "exit" INT 
@@ -64,6 +66,37 @@ if [[ $SHLVL -gt 1 ]]; then
     trap 'say "${RED}Oops...${RESET} Something went wrong on line $LINENO of this script. Exit code was $?" >&2' ERR
 fi
 
+# --------------- Functions ---------------
+
+# Coding Moment: generally, whenever you see something with brackets
+# at the end of it, like this() or like(this), it's a function!
+# It takes inputs and gives (or does) something as an output
+
+# --------------- Input/Output ---------------
+
+# 'say' is a simple function that imitates "echo"
+# This needs to be built out way more! Replace echo for POSIX compatibility
+say() {
+    printf "%b\n" "${1}"
+}
+
+ask_for() { 
+    if [ ${#} -eq 0 ]; then
+        say "To use this command, you need to pass the variable you want,"
+        say "and then add as string of text to ask for it if you want. Example:\n"
+        say "ask_for RESPONSE \"Could you give me a RESPONSE please?\""
+        say ""
+        say "Afterwards, you'll be able to use \$RESPONSE as a variable,"
+        say "and ${ITALIC}say \$RESPONSE${RESET} will respond with your entry"
+        return 0
+    fi
+
+    if [ -n "${2}" ]; then
+        printf "%b" "${2}"
+    fi
+
+    read ${1}
+}
 
 # --------------- Environment Setup ---------------
 
@@ -82,20 +115,10 @@ source_env() {
 # This one takes no arguments (words after the function name
 source_env
 
-# --------------- Functions ---------------
-
-# Coding Moment: generally, whenever you see something with brackets
-# at the end of it, like this() or like(this), it's a function!
-# It takes inputs and gives (or does) something as an output
-
-# 'say' is a simple function that imitates "echo"
-# This needs to be built out way more! Replace echo for POSIX compatibility
-say() {
-    printf "%b\n" "${1}"
-}
+# --------------- Program Installation ---------------
 
 # Checks to see if we can use a command or not
-check_exists() {
+check_for() {
     command -v "$1" >/dev/null
 }
 
@@ -105,8 +128,8 @@ install_if_needed() {
     do
         case $DISTRO in
             "debian")
-                # TODO Better installation detection than check_exists
-                if [ -z $(check_exists $package) ]; then
+                # TODO Better installation detection than check_for
+                if [ -z $(check_for $package) ]; then
                     say "installing $package"
                     sudo apt install -y $package
                 else
@@ -122,8 +145,8 @@ install_if_needed() {
                 fi
                 ;;
             "fedora")
-                # TODO Better installation detection than "check_exists"
-                if [ -z $(check_exists $package) ]; then
+                # TODO Better installation detection than "check_for"
+                if [ -z $(check_for $package) ]; then
                     say "installing $package"
                     sudo dnf install -y $package
                 else
@@ -131,8 +154,8 @@ install_if_needed() {
                 fi
                 ;;
             "mac")
-                # TODO Better installation detection than "check_exists"
-                if [ -z $(check_exists $package) ]; then
+                # TODO Better installation detection than "check_for"
+                if [ -z $(check_for $package) ]; then
                     say "installing $package"
                     brew install $package
                 else
@@ -164,15 +187,15 @@ forget() {
 }
 
 remember() {
-    KEY=$(echo ${1} | cut -d'=' -f 1)
-    VALUE=$(echo ${1} | cut -d'=' -f 2)
+    KEY=$(say ${1} | cut -d'=' -f 1)
+    VALUE=$(say ${1} | cut -d'=' -f 2)
 
     if [[ ! $KEY =~ ^[A-Z_]+$ ]]; then
-        echo "Keys must consist only of capital letters and underscores"
+        say "Keys must consist only of capital letters and underscores"
     fi
 
     if [[ ! $VALUE =~ ^[A-Za-z0-9/_.:]+$ ]]; then
-        echo "Valid characters for env values: letters, numbers, \".\",\"/\",\"_\"",\":\"
+        say "Valid characters for env values: letters, numbers, \".\",\"/\",\"_\"",\":\"
     fi
 
     # If we're setting a valid key/value pair
@@ -180,14 +203,13 @@ remember() {
 
         DOTENV_ENTRY=$(cat .env | grep ${KEY})
         # If something already exists and we're trying to set it to something new
-        if [ -n "$DOTENV_ENTRY" ] && [[ ! $DOTENV_ENTRY = $1 ]]; then
-            echo -e "I'm trying to remember ${BLUE}${1}${RESET}, but..."
-            echo ""
-            echo -e "${BLUE}${DOTENV_ENTRY}${RESET}"
-            echo -e "This has already been defined in the .env file!"
-            echo ""
-            echo -en "would you like to overwrite it? ${BLUE}(y/n)${RESET} "
-            read overwrite
+        if [ -n "$DOTENV_ENTRY" ] && [ "$DOTENV_ENTRY" != "$1" ]; then
+            say "I'm trying to remember ${BLUE}${1}${RESET}, but..."
+            say ""
+            say "${BLUE}${DOTENV_ENTRY}${RESET}"
+            say "This has already been defined in the .env file!"
+            say ""
+            ask_for overwrite "would you like to overwrite it? ${BLUE}(y/n)${RESET} "
             case $overwrite in
                 "y" | "Y")
                     unset ${KEY}
@@ -196,7 +218,7 @@ remember() {
                     export ${1}
                     ;;
             esac
-        else
+        elif [ -z "$DOTENV_ENTRY" ]; then
             unset ${KEY}
             echo "${1}" >> .env
             export ${1}

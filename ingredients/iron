@@ -21,7 +21,7 @@ if [ -d $NVM_DIR ]; then
 fi
 
 set_node_to() {
-    if check_exists nvm; then
+    if check_for nvm; then
         if [ ! $(node -v) = $1 ]; then
             nvm install $1
             nvm alias default $1
