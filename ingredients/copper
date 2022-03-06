@@ -281,4 +281,6 @@ check_ports() {
 	fi
 }
 
+# TODO Expose ports via firewalld
+
 # using yggdrasil could maybe fit in here

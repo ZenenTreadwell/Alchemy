@@ -59,9 +59,7 @@ build_service_from_template() {
             read reset
             case $reset in
                 "Y" | "y")
-                    cat /etc/systemd/system/
                     sudo rm $SERVICE_FILE
-                    cat /etc/systemd/system/
                     ;;
                 "N" | "n")
                     echo "Okay, we'll leave it as is."

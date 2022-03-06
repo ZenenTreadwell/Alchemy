@@ -121,6 +121,14 @@ source_env
 check_for() {
     command -v "$1" >/dev/null
 }
+if [ "$EUID" -eq 0 ]; then
+    echo -e "${RED}Woah there!${RESET} Seems you're running this script as a superuser."
+    echo ""
+    echo "That might cause some issues with permissions and whatnot. Run this script as your default user (without sudo) and I'll ask you when I need superuser permissions"
+    echo ""
+    exit 1
+fi
+
 
 # This one installs utilities to your OS (If you need them!)
 install_if_needed() {
@@ -194,12 +202,12 @@ remember() {
         say "Keys must consist only of capital letters and underscores"
     fi
 
-    if [[ ! $VALUE =~ ^[A-Za-z0-9/_.:]+$ ]]; then
-        say "Valid characters for env values: letters, numbers, \".\",\"/\",\"_\"",\":\"
+    if [[ ! $VALUE =~ ^[A-Za-z0-9/_.:-]+$ ]]; then
+        say "Valid characters for env values: letters, numbers, \".\",\"/\",\"_\"",\":\", \"-\"
     fi
 
     # If we're setting a valid key/value pair
-    if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._:]*$ ]]; then
+    if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._:-]*$ ]]; then
 
         DOTENV_ENTRY=$(cat .env | grep ${KEY})
         # If something already exists and we're trying to set it to something new
@@ -230,3 +238,5 @@ remember() {
 }
 
 LEAD=1
+
+# Confirm? Something to automate the y/n dialog

@@ -31,6 +31,10 @@ prosperity:
 
 free:
 	@echo "This will install freespace, once it exists"
+
+flask:
+	@chmod +x recipes/flask.sh
+	@recipes/flask.sh
 		
 manifest:
 	@chmod +x recipes/wordpress.sh
