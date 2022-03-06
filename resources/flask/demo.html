@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <title>Flask Boilerplate</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='demo.css') }}">
+  </head>
+  <body>
+      <header>This server is running via the <tt>flask_demo.py</tt>
+          file in <tt>{{ wd }}</tt></header>
+      <main>
+      {% if name %}
+        <h1>Hello, {{ name }}!</h1>
+        <p>You provided me a name through the URL of this webpage.</p>
+        <p>Flask parsed it and passed it as a parameter to the 
+        <tt>render_template</tt> function in <tt>flask_demo.py</tt>, 
+        which is located in the directory where you installed Flask</p>
+        <p>It also imports the css as a file in the <tt>static/</tt>
+        directory. This is the standard used for images etc.</p>
+        <hr/>
+        <p>There's plenty to learn about Flask! Hopefully this gives you
+        some of the information you need to dive deeper</p>
+      {% else %}
+      <h1>Hello!</h1>
+      <p>This is a page served up by Flask. Try adding a / followed by
+      your first name in the URL, or click <a href="/beautiful%20human">here</a> 
+      for a demonstration of URL parsing.</p>
+      {% endif %}
+    </main>
+    <footer><small>courtesy of Bare Metal Alchemist, March 2022</small></footer>
+  </body>
+</html>
