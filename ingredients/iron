@@ -15,7 +15,7 @@
 
 # ------------------- NodeJS Ecosystem -------------------
 
-if [ -d $NVM_DIR ]; then
+if [ -d "$NVM_DIR" ]; then
     source $NVM_DIR/nvm.sh
     source $NVM_DIR/bash_completion
 fi
