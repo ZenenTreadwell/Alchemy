@@ -1,0 +1,12 @@
+[Unit]
+Description=Service File for a Flask application or API
+After=network.target
+
+[Service]
+User=USER
+WorkingDirectory=FLASK_DIR
+ExecStart=GUNICORN -b localhost:PORT app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
