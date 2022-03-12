@@ -195,6 +195,13 @@ forget() {
 }
 
 remember() {
+    # Optionally choose to output somewhere other than Alchemy/
+    if [ "${2}" = "to" ]; then
+        ENV_LOCATION=${3}
+    else
+        ENV_LOCATION="$ALCHEMY/.env"
+    fi
+
     KEY=$(say ${1} | cut -d'=' -f 1)
     VALUE=$(say ${1} | cut -d'=' -f 2)
 
@@ -202,39 +209,46 @@ remember() {
         say "Keys must consist only of capital letters and underscores"
     fi
 
-    if [[ ! $VALUE =~ ^[A-Za-z0-9/_.:-]+$ ]]; then
+    VALID_CHARS='A-Za-z0-9/_.:=-'
+
+    if [[ ! $VALUE =~ ^[$VALID_CHARS]+$ ]]; then
+        say "illegal VALUE: $VALUE"
+        say "for key $KEY"
         say "Valid characters for env values: letters, numbers, \".\",\"/\",\"_\"",\":\", \"-\"
     fi
 
     # If we're setting a valid key/value pair
-    if [[ ${1} =~ ^[A-Z_]+\=[A-Za-z0-9/._:-]*$ ]]; then
+    if [[ ${1} =~ ^[A-Z_]+\=[$VALID_CHARS]+$ ]]; then
 
-        DOTENV_ENTRY=$(cat .env | grep ${KEY})
+        DOTENV_ENTRY=$(cat $ENV_LOCATION | grep "^${KEY}" )
         # If something already exists and we're trying to set it to something new
         if [ -n "$DOTENV_ENTRY" ] && [ "$DOTENV_ENTRY" != "$1" ]; then
             say "I'm trying to remember ${BLUE}${1}${RESET}, but..."
             say ""
             say "${BLUE}${DOTENV_ENTRY}${RESET}"
-            say "This has already been defined in the .env file!"
+            say "This has already been defined in the $ENV_LOCATION file!"
             say ""
             ask_for overwrite "would you like to overwrite it? ${BLUE}(y/n)${RESET} "
             case $overwrite in
                 "y" | "Y")
                     unset ${KEY}
-                    sed -i "/^${KEY}.*$/d" .env
-                    echo "${1}" >> .env
+                    sed -i "/^${KEY}.*$/d" $ENV_LOCATION
+                    echo "${1}" >> $ENV_LOCATION
                     export ${1}
                     ;;
             esac
         elif [ -z "$DOTENV_ENTRY" ]; then
             unset ${KEY}
-            echo "${1}" >> .env
+            echo "${1}" >> $ENV_LOCATION
             export ${1}
         fi
     fi
 
-    # Once we've made changes, we need to make sure we're up to date
-    source_env
+    # Once we've made changes to the Alchemy .env, 
+    # we need to make sure we're up to date
+    if [ -z "$2" ]; then
+        source_env
+    fi
 }
 
 LEAD=1

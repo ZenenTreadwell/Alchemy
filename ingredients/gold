@@ -13,7 +13,7 @@
 # the Bitcoin ecosystem
 
 install_bitcoin() {
-    echo -e "${BOLD}Installing Bitcoin Core${RESET}"
+    say "${BOLD}Installing Bitcoin Core${RESET}"
 
     # We're building bitcoin from source here. It might be slower than
     # downloading the pre-built binaries but this is more reliable
@@ -36,7 +36,7 @@ install_bitcoin() {
 }
 
 install_lightning() {
-    echo -e "${BOLD}Installing lightningd${RESET}"
+    say "${BOLD}Installing lightningd${RESET}"
     git clone https://github.com/ElementsProject/lightning.git ./lightning
     pushd ./lightning
     git checkout v0.10.2
@@ -53,7 +53,7 @@ install_lightning() {
 }
 
 install_clboss() {
-    echo -e "${BOLD}Installing clboss${RESET}"
+    say "${BOLD}Installing clboss${RESET}"
     git clone https://github.com/ZmnSCPxj/clboss.git ./clboss
     pushd ./clboss
     git checkout 0.11B
@@ -70,43 +70,49 @@ configure_bitcoin() {
     mkdir -p ~/.bitcoin
 
     AUTHDEETS=$(python3 scripts/rpcauth.py ao)
-    AUTHLINE=$(echo $AUTHDEETS | grep -o rpcauth=ao:[^[:space:]]*[[:space:]])
-    PASSLINE=$(echo $AUTHDEETS | grep -o [^[:space:]]*\$)
+    AUTHLINE=$(say "$AUTHDEETS" | sed '2q;d' )
+    PASSLINE=$(say "$AUTHDEETS" | sed '4q;d' )
+
+    remember "BTC_PASS=${PASSLINE}"
 
     if  [ -f $HOME/.bitcoin/bitcoin.conf ]; then
-        echo -e "Looks like you already have a ${BLUE}bitcoin.conf${RESET} file!"
-        echo ""
+        say "Looks like you already have a ${BLUE}bitcoin.conf${RESET} file!"
+        say ""
         cat $HOME/.bitcoin/bitcoin.conf
-        echo ""
-        echo -en "Would you like to reset it? ${BLUE}(y/n)${RESET}: "
-        read btc_reconf
+        say ""
+        ask_for btc_reconf "Would you like to reset it? ${BLUE}(y/n)${RESET}: "
         case $btc_reconf in
             "y" | "Y")
                 cp resources/sample_bitcoin.conf $HOME/.bitcoin/bitcoin.conf
-                echo 'Reset bitcoin configuration file'
+                say 'Reset bitcoin configuration file'
                 ;;
             "n" | "N")
-                echo "Cool, we'll leave it as is then".
+                say "Cool, we'll leave it as is then".
                 ;;
         esac
     else
         cp resources/sample_bitcoin.conf $HOME/.bitcoin/bitcoin.conf
-        echo 'Created default bitcoin config'
+        say 'Created default bitcoin config'
     fi
 
     sed -i "s/BTC_LOGIN/${AUTHLINE}/" $HOME/.bitcoin/bitcoin.conf
-    echo ""
+    say ""
 
-    echo -en "Next question - do you have 500GB of open memory on this device? ${BLUE}(y/n)${RESET}: "
-    read prune
-    echo ""
+    ask_for prune "Next question - would you like to operate bitcoin in pruned mode? \
+This reduces its file size from ~500GB to something more portable ${BLUE}(y/n)${RESET}: "
+    say ""
     case $prune in
         y | Y)
-            echo "Okay great! We'll leave the bitcoin config it as it is."
+            say "Let's ${GREEN}enable pruning${RESET} to keep the file size down, then."
+            prune_size=0
+            while [ "$prune_size" -lt 550 ]; do
+                ask_for prune_size "How many Mb are you willing to put towards btc? Min 550: "
+            done
+
+            sed -i "s/txindex=1/prune=${prune_size}/" $HOME/.bitcoin/bitcoin.conf
             ;;
         *)
-            echo -e "Let's ${GREEN}enable pruning${RESET} to keep the file size down, then."
-            sed -i "s/txindex=1/prune=550/" $HOME/.bitcoin/bitcoin.conf
+            say "Okay great! We'll leave the bitcoin config it as it is."
             ;;
     esac
 }
@@ -115,29 +121,27 @@ configure_lightning() {
     mkdir -p $HOME/.lightning
 
     if  [ -f $HOME/.lightning/config ]; then
-        echo -e "Looks like you already have a ${BLUE}lightning config${RESET} file!"
-        echo ""
+        say "Looks like you already have a ${BLUE}lightning config${RESET} file!"
+        say ""
         cat $HOME/.lightning/config
-        echo ""
-        echo -en "Would you like to reset it? ${BLUE}(y/n)${RESET}: "
-        read ln_reconf
+        say ""
+        ask_for ln_reconf "Would you like to reset it? ${BLUE}(y/n)${RESET}: "
         case $ln_reconf in
             "y" | "Y")
                 cp resources/sample_lightning_config $HOME/.lightning/config
-                echo -e "${GREEN}Reset lightning configuration file${RESET}"
+                say "${GREEN}Reset lightning configuration file${RESET}"
                 ;;
             "n" | "N")
-                echo "Cool, we'll leave it as is then".
+                say "Cool, we'll leave it as is then".
                 ;;
         esac
     else
         cp resources/sample_lightning_config $HOME/.lightning/config
-        echo -e "${GREEN}Created default lightning config${RESET}"
+        say "${GREEN}Created default lightning config${RESET}"
     fi
 
-    echo ""
-    echo -en "Would you like to use clboss to automatically open lightning channels? ${BLUE}(y/n)${RESET}: "
-    read clboss_enable
+    say ""
+    ask_for clboss_enable "Would you like to use clboss to automatically open lightning channels? ${BLUE}(y/n)${RESET}: "
     case $clboss_enable in
         "y" | "Y")
             if ! check_for clboss; then
@@ -146,13 +150,32 @@ configure_lightning() {
             sed -i "s/#plugin/plugin/" $HOME/.lightning/config
             sed -i "s/#log/log/" $HOME/.lightning/config
             echo ""
-            echo -e "${GREEN}clboss successfully configured!${RESET}"
+            say "${GREEN}clboss successfully configured!${RESET}"
             ;;
         "n" | "N")
-            echo ""
-            echo "Sounds good. You might want to open some channels manually to participate in the network!".
+            say ""
+            say "Sounds good. You might want to open some channels manually to participate in the network!".
             ;;
     esac
+}
+
+bitcoin_is_synced() {
+    if [ -f "$HOME/.bitcoin/debug.log" ]; then
+        progress=$(tac ~/.bitcoin/debug.log | grep -m1 UpdateTip | awk '{print $10}')
+        case $progress in
+            *"=1"*)
+                say "Bitcoin is synced!"
+                return 0
+                ;;
+            *)
+                say "Bitcoin is not synced yet"
+                return 1
+                ;;
+        esac
+    else
+        say "Not sure where your bitcoin log is!"
+        return 2
+    fi
 }
 
 GOLD=1

@@ -246,7 +246,7 @@ check_ports() {
         ADDR=$DOMAIN
     fi
 
-    echo -e "Querying this computer from ${BLUE}${ADDR}${RESET}"
+    echo -e "Querying this computer's network from ${BLUE}${ADDR}${RESET}"
     echo ""
 	install_if_needed nmap
 	nmap -Pn $EXTERNAL_IP > nmap.txt

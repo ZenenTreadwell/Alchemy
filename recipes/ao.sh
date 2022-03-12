@@ -98,11 +98,11 @@ while [[ -z $AO ]]; do
     case $ao_select in
         "1")
             echo -e "Minimalism, I like it! Proceeding with ${BLUE}ao-3${RESET} installation"
-            AO=3
+            AO='3'
             ;;
         "2")
             echo -e "It's got community! Proceeding with ${BLUE}ao-react${RESET} installation"
-            AO=react
+            AO='react'
             ;;
         *)
             echo "that aint no AO i ever heard of, try again"
@@ -169,7 +169,22 @@ echo ""
 
 # TODO this is really janky/fragile, it would be better to store this in ~/.ao
 CONFIG_FILE=$HOME/ao-$AO/configuration.js
+UNIFIED_CONFIG=$HOME/.ao/env
+if [ ! -f "$UNIFIED_CONFIG" ]; then
+    touch $UNIFIED_CONFIG
+fi
 
+remember "SQLITE_DATABASE=${HOME}/.ao/database.sqlite3" to "$UNIFIED_CONFIG"
+remember "PASSLINE=${BTC_PASS}" to "$UNIFIED_CONFIG"
+remember "PRIVATEKEY=${HOME}/.ao/key" to "$UNIFIED_CONFIG"
+remember "CLIGHTNING_DIR=${HOME}/.lightning/bitcoin" to "$UNIFIED_CONFIG"
+remember "MEMES_DIR=${HOME}/.ao/memes" to "$UNIFIED_CONFIG"
+remember "RENT=0" to "$UNIFIED_CONFIG"
+remember "LIGHTNINGDIR=0" to "$UNIFIED_CONFIG"
+
+say "!!!!!!! WARNING !!!!!! I'm exaggerating but this is not going to \
+configure AO properly. It's time that we build out the unified config"
+read
 case $AO in
     "3")
         if [ ! -d ~/ao-3 ]; then
@@ -181,7 +196,7 @@ case $AO in
         else
             cp resources/ao-config $CONFIG_FILE
             sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $CONFIG_FILE
-            sed -i "s#PASSLINE#${PASSLINE}#" $CONFIG_FILE
+            sed -i "s#PASSLINE#${BTC_PASS}#" $CONFIG_FILE
             sed -i "s#PRIVATEKEY#${HOME}/.ao/key#" $CONFIG_FILE
             sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $CONFIG_FILE
             sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $CONFIG_FILE
@@ -206,7 +221,7 @@ case $AO in
         else
             cp resources/ao-config $CONFIG_FILE
             sed -i "s#SQLITE_DATABASE#${HOME}/.ao/database.sqlite3#" $CONFIG_FILE
-            sed -i "s#PASSLINE#${PASSLINE}#" $CONFIG_FILE
+            sed -i "s#PASSLINE#${BTC_PASS}#" $CONFIG_FILE
             sed -i "s#PRIVATEKEY#${HOME}/.ao/key#" $CONFIG_FILE
             sed -i "s#CLIGHTNING_DIR#${HOME}/.lightning/bitcoin#" $CONFIG_FILE
             sed -i "s#MEMES_DIR#${HOME}/.ao/memes#" $CONFIG_FILE
