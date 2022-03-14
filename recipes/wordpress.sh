@@ -3,78 +3,29 @@
 # Downloads and configures Wordpress onto the current system
 # Zen, 2022
 
-# Font decoration for better a e s t h e t i c
-RED="\e[0;91m"
-GREEN="\e[0;92m"
-BLUE="\e[0;94m"
-BOLD="\e[1m"
-ULINE="\e[4m"
-NC="\e[0m"
-
-# ------------------- Step 1  - Installing / Configuring MariaDB -------------------
-
-if [ -f "/etc/debian_version" ]; then
-    DISTRO="debian"
-    echo "Debian, Ubuntu, or Raspbian OS detected."
-elif [ -f "/etc/arch-release" ]; then
-    DISTRO="arch"
-    echo "Arch- or Manjaro-based OS detected."
-elif [ $(uname | grep -c "Darwin") -eq 1 ]; then
-    DISTRO="mac"
-    echo "MacOS detected."
-else
-    echo "I don't know what OS you're running! Cancelling this operation."
-    exit 1
-fi
-
-echo ""
-
-install_if_needed() {
-    for package in "$@"
-    do
-        if [ -z $(which $package) ]; then
-            echo "installing" $package
-
-            case $DISTRO in
-                "debian")
-                    sudo apt install -y $package
-                    ;;
-                "arch")
-                    sudo pacman -S $package
-                    ;;
-                "mac")
-                    brew install $package
-                    ;;
-            esac
-
-        else
-            echo $package 'already installed!'
-        fi
-    done
-
-}
+source ingredients/lead
 
 install_if_needed mariadb-server php php-fpm php-mysql nginx
 
 echo ""
 
-read -p "Do you want to secure the database for production deployment? (y/n): " -n1 boot
-echo ""
+ask_for boot "Do you want to secure the database for production deployment? (y/n): "
+say ""
 case $boot in
     y | Y)
-        echo "Securing database..."
+        say "Securing database..."
         sudo mysql_secure_installation
         ;;
 esac
 echo ""
 
 MATCH=0
-while [[ MATCH -eq 0 ]]; do
-    read -sp "Enter the password that you would like to use for MariaDB: " pass
+while [ $MATCH -eq 0 ]; do
+    ask_for pass "Enter the password that you would like to use for MariaDB: "
+    say ""
+    ask_for pass2 "Please confirm your password: "
     echo ""
-    read -sp "Please confirm your password: " pass2
-    echo ""
-    if [[ "$pass" == "$pass2" ]]; then
+    if [ "$pass" != "$pass2" ]; then
         MATCH=1
         sudo mariadb -e "CREATE DATABASE wordpress;"
         sudo mariadb -e "GRANT ALL ON wordpress.* TO '${USER}'@'localhost' IDENTIFIED BY '${pass}' WITH GRANT OPTION;"

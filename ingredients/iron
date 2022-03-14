@@ -10,8 +10,31 @@
 # our society as a whole.
 
 # This ingredient contains functions for building web applications and
-# running them frm your server. Expect to use this one a lot if you're
+# running them from your server. Expect to use this one a lot if you're
 # writing alchemy recipes!
+
+# ------------------- Databases -------------------
+
+install_database() {
+    if [ -n "$ALCHEMY_DB" ]; then
+        say "Alchemy has already installed ${ALCHEMY_DB} as the database"
+    fi
+
+    if [ -z "${1}" ]; then
+        say "Okay, let's get you set up with a database"
+        say "But I'm too tired of this to write this atm"
+    fi
+
+    case ${1} in
+        "postgres" | "postgresql")
+            install_if_needed postgresql
+            ;;
+        "mysql" | "mariadb")
+            install_if_needed mariadb-server
+            ;;
+    esac
+}
+
 
 # ------------------- NodeJS Ecosystem -------------------
 
@@ -88,12 +111,25 @@ build_service_from_template() {
 
 activate_service() {
     SERVICE=$1
-    SERVICE_FILE=/etc/systemd/system/${SERVICE}.service
-    if [ -f "$SERVICE_FILE" ]; then
-        echo -e "Enabling and starting ${GREEN}${SERVICE}${RESET}"
-        sudo systemctl enable ${SERVICE}
-        sudo systemctl start ${SERVICE}
-    fi
+    sudo systemctl status ${SERVICE} &> /dev/null
+    return_code=$?
+
+    case $return_code in
+        0)
+            say "${BLUE}${SERVICE}${RESET} is already running"
+            ;;
+        3)
+            say "Enabling and starting ${GREEN}${SERVICE}${RESET}"
+            sudo systemctl enable ${SERVICE}
+            sudo systemctl start ${SERVICE}
+            ;;
+        4)
+            say "Hmm, I don't see a service for ${SERVICE}"
+            ;;
+        *)
+            say "whoa what the heck is $return_code"
+            ;;
+    esac
 }
 
 IRON=1
