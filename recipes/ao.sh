@@ -3,7 +3,7 @@
 # Script for installing the base dependencies of AO and getting it running
 # Bare Metal Alchemist, 2022
 
-source ingredients/lead
+. ingredients/lead
 source ingredients/copper
 source ingredients/iron
 source ingredients/gold

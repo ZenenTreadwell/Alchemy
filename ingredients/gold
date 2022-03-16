@@ -21,8 +21,19 @@ install_bitcoin() {
         wget https://bitcoincore.org/bin/bitcoin-core-22.0/bitcoin-22.0.tar.gz -P 🜍/
     fi
 
-    # This still relies on package management though
-    install_if_needed boost
+    # Dependencies
+    case $DISTRO in
+        "arch")
+            # I don't think we need bsdmainutils?
+            install_if_needed boost base-devel python3 openssl libevent zeromq qt5 protobuf git ccache sqlite3
+            ;;
+        "debian")
+            install_if_needed boost build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 libssl-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler git libsqlite3-dev ccache
+            ;;
+        *)
+            say "I haven't configured this for $DISTRO yet!"
+            ;;
+    esac
 
     tar -xvf 🜍/bitcoin-22.0.tar.gz
     sleep 1
