@@ -59,7 +59,7 @@ case $DISTRO in
         # install_if_needed better-computer
         ;;
     "fedora")
-        install_if_needed git wget tor sqlite3 autoconf autoconf-archive automake \
+        install_if_needed git wget sqlite3 autoconf autoconf-archive automake \
         python python3 python3-mako pkg-config fakeroot devscripts
         ;;
 esac
