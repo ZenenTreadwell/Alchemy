@@ -73,6 +73,7 @@ configure_bitcoin() {
     AUTHLINE=$(say "$AUTHDEETS" | sed '2q;d' )
     PASSLINE=$(say "$AUTHDEETS" | sed '4q;d' )
 
+    # TODO: This doesn't update anything that actually uses BTC pass
     remember "BTC_PASS=${PASSLINE}"
 
     if  [ -f $HOME/.bitcoin/bitcoin.conf ]; then
